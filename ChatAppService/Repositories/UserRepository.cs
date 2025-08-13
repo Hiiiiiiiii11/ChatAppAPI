@@ -47,6 +47,12 @@ namespace UserService.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
+        public async Task<User?> GetUserByUsernameAsync(string username)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+        }
+
         public async Task UpdateAsync(User user)
         {
             _context.Users.Update(user);

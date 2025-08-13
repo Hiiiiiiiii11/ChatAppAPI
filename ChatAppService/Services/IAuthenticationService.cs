@@ -7,8 +7,9 @@ using UserService.Models;
 
 namespace UserService.Services
 {
-    public interface IAuthentication
+    public interface IAuthenticationService
     {
-        Task<User?> AuthenticateUserAsync(string username, string password);
+        Task<User> AuthenticateUserAsync(string username, string password);
+        string GenerateTokenAsync(User user);
     }
 }

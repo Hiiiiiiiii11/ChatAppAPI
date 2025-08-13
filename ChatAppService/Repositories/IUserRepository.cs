@@ -16,5 +16,6 @@ namespace UserService.Repositories
         Task AddAsync(User user);
         Task UpdateAsync(User user);
         Task DeleteAsync(Guid id);
+        Task<User?> GetUserByUsernameAsync(string username);
     }
 }

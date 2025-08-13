@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UserService.Model.Response
+namespace UserService.Model.Request
 {
-    public class AuthResponse
+    public class ChangeUserPasswordRequest
     {
-        public string Token { get; set; }
+        public string Password { get; set; }
     }
 }

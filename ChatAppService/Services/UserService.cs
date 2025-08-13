@@ -15,9 +15,27 @@ namespace UserService.Services
         {
             _userRepository = userRepository;
         }
-        public async Task AddUserAsync(User user)
+        public async Task<User> AddUserAsync(User user)
         {
-            await _userRepository.AddAsync(user);
+            var existUser = await _userRepository.GetUserByUsernameAsync(user.Username);
+            if (existUser != null)
+            {
+                throw new Exception("Username already exists.");
+            }
+
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+            var newUser = new User
+            {
+                Username = user.Username,
+                PasswordHash = hashedPassword,
+                DisplayName = user.DisplayName,
+                CreatedAt = DateTime.UtcNow,
+                AvatarUrl = !string.IsNullOrEmpty(user.AvatarUrl) ? user.AvatarUrl : null
+            };
+
+            await _userRepository.AddAsync(newUser);
+
+            return newUser; 
         }
 
         public async Task DeleteUserAsync(Guid id)
