@@ -47,10 +47,10 @@ namespace UserService.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<User?> GetUserByUsernameAsync(string username)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == username);
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task UpdateAsync(User user)

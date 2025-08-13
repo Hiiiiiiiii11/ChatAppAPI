@@ -17,10 +17,10 @@ namespace UserService.Repositories
         {
             _context = context;
         }
-        public Task<User> GetUserByUsernameAsync(string username)
+        public Task<User> GetUserByEmailAsync(string email)
         {
             return _context.Users
-                .FirstOrDefaultAsync(u => u.Username == username);
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
     }
 }

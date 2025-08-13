@@ -17,7 +17,7 @@ namespace UserService.Services
         }
         public async Task<User> AddUserAsync(User user)
         {
-            var existUser = await _userRepository.GetUserByUsernameAsync(user.Username);
+            var existUser = await _userRepository.GetUserByEmailAsync(user.Email);
             if (existUser != null)
             {
                 throw new Exception("Username already exists.");
@@ -26,7 +26,7 @@ namespace UserService.Services
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             var newUser = new User
             {
-                Username = user.Username,
+                Email = user.Email,
                 PasswordHash = hashedPassword,
                 DisplayName = user.DisplayName,
                 CreatedAt = DateTime.UtcNow,
@@ -57,7 +57,7 @@ namespace UserService.Services
         {
             return await _userRepository.GetAllAsync()
                 .ContinueWith(task => task.Result
-                    .Where(u => u.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+                    .Where(u => u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
         }
 
         public async Task UpdateUserAsync(User user)

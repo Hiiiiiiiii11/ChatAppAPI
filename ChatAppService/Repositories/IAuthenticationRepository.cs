@@ -9,6 +9,6 @@ namespace UserService.Repositories
 {
     public interface IAuthenticationRepository
     {
-        Task<User> GetUserByUsernameAsync(string name);
+        Task<User> GetUserByEmailAsync(string email);
     }
 }

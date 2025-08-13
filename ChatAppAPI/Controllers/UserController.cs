@@ -26,9 +26,13 @@ namespace UserService.Controllers
         {
             try
             {
-                var userEntity = new User
+                if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+                    return BadRequest(new { message = "Email and password are required." });
+                if (!request.Email.Contains("@"))
+                    return BadRequest(new { message = "Invalid email format." });
+                    var userEntity = new User
                 {
-                    Username = request.Username,
+                    Email = request.Email,
                     PasswordHash = request.Password, 
                     DisplayName = request.DisplayName
                 };

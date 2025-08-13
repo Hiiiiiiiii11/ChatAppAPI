@@ -28,9 +28,9 @@ namespace UserService.Services
             _userRepository = userRepository;
             _jwtSettings = jwtOptions.Value;
         }
-        public async Task<User> AuthenticateUserAsync(string username, string password)
+        public async Task<User> AuthenticateUserAsync(string email, string password)
         {
-            var user = await _userRepository.GetUserByUsernameAsync(username);
+            var user = await _userRepository.GetUserByEmailAsync(email);
 
             if (user == null)
             {
@@ -51,7 +51,7 @@ namespace UserService.Services
         {
             var claims = new[]
             {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Username),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("id", user.Id.ToString()),
             new Claim("displayName", user.DisplayName ?? string.Empty),
