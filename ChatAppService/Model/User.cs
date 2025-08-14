@@ -13,6 +13,7 @@ namespace UserService.Models
         public string PasswordHash { get; set; }
         public string DisplayName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public string? AvatarUrl { get; set; } 
+        public string? AvatarUrl { get; set; }
+        public bool IsEmailVerified { get; set; } = false;
     }
 }

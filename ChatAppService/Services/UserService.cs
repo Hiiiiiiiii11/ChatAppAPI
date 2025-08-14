@@ -18,9 +18,17 @@ namespace UserService.Services
         public async Task<User> AddUserAsync(User user)
         {
             var existUser = await _userRepository.GetUserByEmailAsync(user.Email);
+
             if (existUser != null)
             {
-                throw new Exception("Username already exists.");
+                if (!existUser.IsEmailVerified)
+                {
+                    throw new Exception("Email này chưa được xác minh. Vui lòng xác minh trước khi đăng ký.");
+                }
+                else
+                {
+                    throw new Exception("Email đã được sử dụng.");
+                }
             }
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
