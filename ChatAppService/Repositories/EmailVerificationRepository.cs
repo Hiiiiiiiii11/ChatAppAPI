@@ -39,5 +39,11 @@ namespace UserService.Repositories
             _context.EmailVerifications.Update(verification);
             await _context.SaveChangesAsync();
         }
+        public async Task<EmailVerification?> GetByEmailAsync(string email)
+        {
+            return await _context.EmailVerifications
+                .OrderByDescending(e => e.ExpiredAt)
+                .FirstOrDefaultAsync(e => e.Email == email);
+        }
     }
 }

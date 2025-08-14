@@ -10,5 +10,9 @@ namespace UserService.Services
     {
         Task SendVerificationCodeAsync(string email);
         Task<bool> VerifyCodeAsync(string email, string code);
+        Task SendPasswordResetCodeAsync(string email, string otp);
+        Task<bool> IsEmailVerifiedAsync(string email);
+        Task SendPasswordChangedNotificationAsync(string email);
+
     }
 }

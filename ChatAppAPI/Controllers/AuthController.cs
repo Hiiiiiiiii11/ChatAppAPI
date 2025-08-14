@@ -5,6 +5,7 @@ using UserService.Services;
 using UserService.Models;
 using UserService.Model.Request;
 using UserService.Model.Response;
+using UserService.Admin;
 
 namespace UserService.Controllers
 {
@@ -13,10 +14,12 @@ namespace UserService.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthenticationService _authService;
+        private readonly AdminAccountSettings _adminAccountSettings ;
 
-        public AuthController(IAuthenticationService authService)
+        public AuthController(IAuthenticationService authService,AdminAccountSettings adminAccountSettings)
         {
             _authService = authService;
+            _adminAccountSettings = adminAccountSettings;
         }
 
         [HttpPost("login")]
@@ -34,7 +37,12 @@ namespace UserService.Controllers
                 {
                     return Unauthorized(new { message = "Invalid username or password." });
                 }
-                var token = _authService.GenerateTokenAsync(user);
+                if (user.IsActive == false)
+                    return Unauthorized(new { message = "Account be unactived." });
+
+                var role = user.Email == _adminAccountSettings.Email ? "Admin" : "User";
+
+                var token = _authService.GenerateTokenAsync(user,role);
                 var response = new AuthResponse
                 {
                     Token = token,

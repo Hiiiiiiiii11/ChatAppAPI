@@ -47,7 +47,7 @@ namespace UserService.Services
             return user;
         }
 
-        public string GenerateTokenAsync(User user)
+        public string GenerateTokenAsync(User user ,string role)
         {
             var claims = new[]
             {
@@ -56,6 +56,7 @@ namespace UserService.Services
             new Claim("id", user.Id.ToString()),
             new Claim("displayName", user.DisplayName ?? string.Empty),
             new Claim("avatarUrl", user.AvatarUrl ?? string.Empty),
+            new Claim("role",role ?? string.Empty)
         };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));

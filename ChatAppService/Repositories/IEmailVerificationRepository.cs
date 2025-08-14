@@ -12,5 +12,6 @@ namespace UserService.Repositories
         Task AddAsync(EmailVerification verification);
         Task<EmailVerification?> GetByEmailAndCodeAsync(string email, string code);
         Task MarkAsVerifiedAsync(EmailVerification verification);
+        Task<EmailVerification?> GetByEmailAsync(string email);
     }
 }
