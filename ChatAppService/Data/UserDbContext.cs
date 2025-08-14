@@ -1,10 +1,5 @@
-﻿
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
+using UserService.Model;
 using UserService.Models;
 
 namespace UserService.Data
@@ -14,5 +9,40 @@ namespace UserService.Data
         public UserDbContext(DbContextOptions<UserDbContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<EmailVerification> EmailVerifications { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // User table
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(u => u.Id);
+                entity.HasIndex(u => u.Email).IsUnique();
+                entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+                entity.Property(u => u.PasswordHash).IsRequired();
+            });
+
+            // PasswordResetToken table
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(t => t.Id);
+                entity.Property(t => t.Token).IsRequired();
+                entity.HasOne(t => t.User)
+                      .WithMany(u => u.PasswordResetTokens)
+                      .HasForeignKey(t => t.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // EmailVerification table
+            modelBuilder.Entity<EmailVerification>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Code).IsRequired();
+            });
+        }
     }
 }

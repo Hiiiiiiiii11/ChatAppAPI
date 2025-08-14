@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UserService.Model;
 
 namespace UserService.Models
 {
@@ -14,6 +15,7 @@ namespace UserService.Models
         public string DisplayName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? AvatarUrl { get; set; }
-        public bool IsEmailVerified { get; set; } = false;
+        public bool IsActive { get; set; } = true;
+        public ICollection<PasswordResetToken> PasswordResetTokens { get; set; }
     }
 }

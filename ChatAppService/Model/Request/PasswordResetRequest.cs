@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace UserService.Model.Request
 {
-    public class ChangeUserPasswordRequest
+    public class PasswordResetRequest
     {
-        public string Password { get; set; }
+        public string Email { get; set; }
     }
 }
