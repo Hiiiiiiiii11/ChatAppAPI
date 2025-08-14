@@ -15,22 +15,17 @@ namespace UserService.Services
         {
             _userRepository = userRepository;
         }
+
+
+
         public async Task<User> AddUserAsync(User user)
         {
             var existUser = await _userRepository.GetUserByEmailAsync(user.Email);
 
-            if (existUser != null)
+            if(existUser != null)
             {
-                if (!existUser.IsEmailVerified)
-                {
-                    throw new Exception("Email này chưa được xác minh. Vui lòng xác minh trước khi đăng ký.");
-                }
-                else
-                {
-                    throw new Exception("Email đã được sử dụng.");
-                }
+                throw new InvalidOperationException($"User with email {user.Email} already exists.");
             }
-
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             var newUser = new User
             {
@@ -38,7 +33,8 @@ namespace UserService.Services
                 PasswordHash = hashedPassword,
                 DisplayName = user.DisplayName,
                 CreatedAt = DateTime.UtcNow,
-                AvatarUrl = !string.IsNullOrEmpty(user.AvatarUrl) ? user.AvatarUrl : null
+                AvatarUrl = !string.IsNullOrEmpty(user.AvatarUrl) ? user.AvatarUrl : null,
+                IsActive = true
             };
 
             await _userRepository.AddAsync(newUser);
@@ -68,9 +64,46 @@ namespace UserService.Services
                     .Where(u => u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
         }
 
+        public async Task UnActiveUser(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with id {id} not found.");
+            }
+            if(user.IsActive == false)
+            {
+                throw new Exception("User status is unactive already.");
+            }    
+
+            user.IsActive = false;
+            await _userRepository.UpdateAsync(user);
+        }
+        public async Task ActiveUser(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with id {id} not found.");
+            }
+            if (user.IsActive == true)
+            {
+                throw new Exception("User status is active already.");
+            }
+
+            user.IsActive = true;
+            await _userRepository.UpdateAsync(user);
+        }
+
         public async Task UpdateUserAsync(User user)
         {
             await _userRepository.UpdateAsync(user);
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            var existUser = await _userRepository.GetUserByEmailAsync(email);
+            return existUser ?? throw new KeyNotFoundException($"User with email {email} not found.");
         }
     }
 }

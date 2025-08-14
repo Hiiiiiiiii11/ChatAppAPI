@@ -34,23 +34,14 @@ namespace UserService.Services
             };
             await _emailVerificationRepository.AddAsync(verificationEmail);
 
+            await SendEmailAsync(email, "Email Verification Code",
+                $"Your verification code is: <b>{code}</b>. It will expire in 5 minutes.");
+        }
 
-            // 3. Gửi email
-            var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
-            {
-                Credentials = new NetworkCredential(_emailSettings.SenderEmail, _emailSettings.SenderPassword),
-                EnableSsl = true
-            };
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
-                Subject = "Email Verification Code",
-                Body = $"Your verification code is: <b>{code}</b>. It will expire in 5 minutes.",
-                IsBodyHtml = true
-            };
-            mailMessage.To.Add(email);
-            await client.SendMailAsync(mailMessage);
+        public async Task SendPasswordResetCodeAsync(string email, string otp)
+        {
+            await SendEmailAsync(email, "Password Reset OTP",
+                $"Your OTP is: <b>{otp}</b>. It will expire in 10 minutes.");
         }
 
         public async Task<bool> VerifyCodeAsync(string email, string code)
@@ -64,5 +55,36 @@ namespace UserService.Services
             await _emailVerificationRepository.MarkAsVerifiedAsync(verification);
             return true;
         }
+        public async Task<bool> IsEmailVerifiedAsync(string email)
+        {
+            var verification = await _emailVerificationRepository.GetByEmailAsync(email);
+            return verification != null && verification.IsVerified;
+        }
+
+        private async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
+            {
+                Credentials = new NetworkCredential(_emailSettings.SenderEmail, _emailSettings.SenderPassword),
+                EnableSsl = true
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
+            };
+            mailMessage.To.Add(toEmail);
+
+            await client.SendMailAsync(mailMessage);
+        }
+        public async Task SendPasswordChangedNotificationAsync(string email)
+        {
+            await SendEmailAsync(email, "Password Changed Successfully",
+                "Your password has been successfully changed. If you did not make this change, please contact our support team immediately.");
+        }
+
     }
 }

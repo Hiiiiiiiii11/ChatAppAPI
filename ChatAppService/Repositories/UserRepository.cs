@@ -16,6 +16,9 @@ namespace UserService.Repositories
         {
             _context = context;
         }
+
+      
+
         public async Task AddAsync(User user)
         {
             await _context.Users.AddAsync(user);
@@ -53,10 +56,38 @@ namespace UserService.Repositories
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public Task<List<User>> SearchAsync(string searchTerm)
+        {
+            return _context.Users
+                .Where(u => u.DisplayName.Contains(searchTerm) || u.Email.Contains(searchTerm))
+                .ToListAsync();
+        }
+
+        public Task UnActiveUser(Guid id)
+        {
+            var user = _context.Users.Find(id);
+            if (user != null)
+            {
+                user.IsActive = false;
+                _context.Users.Update(user);
+            }
+            return _context.SaveChangesAsync();
+        }
+
         public async Task UpdateAsync(User user)
         {
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
+        }
+        public Task ActiveUser(Guid id)
+        {
+            var user = _context.Users.Find(id);
+            if (user != null)
+            {
+                user.IsActive = true;
+                _context.Users.Update(user);
+            }
+            return _context.SaveChangesAsync();
         }
     }
 }

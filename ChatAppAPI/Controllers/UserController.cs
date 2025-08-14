@@ -14,11 +14,15 @@ namespace UserService.Controllers
     {
         private readonly IUserService _userService;
         private readonly IUploadPhotoService _photoService;
+        private readonly IEmailVerificationService _emailVerificationService;
+        private readonly IPasswordResetService _passwordResetService;
 
-        public UserController(IUserService userService, IUploadPhotoService photoService)
+        public UserController(IUserService userService, IUploadPhotoService photoService,IEmailVerificationService emailVerificationService, IPasswordResetService passwordResetService)
         {
             _userService = userService;
             _photoService = photoService;
+            _emailVerificationService = emailVerificationService;
+            _passwordResetService = passwordResetService;
         }
 
         [HttpPost]
@@ -30,7 +34,9 @@ namespace UserService.Controllers
                     return BadRequest(new { message = "Email and password are required." });
                 if (!request.Email.Contains("@"))
                     return BadRequest(new { message = "Invalid email format." });
-                    var userEntity = new User
+                if (!await _emailVerificationService.IsEmailVerifiedAsync(request.Email))
+                    return BadRequest(new { message = "Email chưa được xác thực." });
+                var userEntity = new User
                 {
                     Email = request.Email,
                     PasswordHash = request.Password, 
@@ -100,12 +106,58 @@ namespace UserService.Controllers
             return Ok(new { message = "User updated successfully" });
         }
 
-        [Authorize]
+        
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
             await _userService.DeleteUserAsync(id);
             return Ok(new { message = "User deleted successfully." });
+        }
+
+        [HttpPost("search")]
+        public async Task<IActionResult> SearchUsers([FromBody] SearchUserRequest request)
+        {
+            if (string.IsNullOrEmpty(request.DisplayName))
+                return BadRequest(new { message = "Search term is required." });
+            var users = await _userService.SearchUsersAsync(request.DisplayName);
+            return Ok(users);
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPut("unactive/{id}")]
+        public async Task<IActionResult> UnActiveUser(Guid id)
+        {
+            try
+            {
+                await _userService.UnActiveUser(id);
+                return Ok(new { message = "User deactivated successfully." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = "User isn't exist!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "No data update provide." });
+            }
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPut("active/{id}")]
+        public async Task<IActionResult> ActiveUser(Guid id)
+        {
+            try
+            {
+                await _userService.ActiveUser(id);
+                return Ok(new { message = "User activated successfully." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = "User isn't exist!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "No data update provide." });
+            }
         }
     }
 }

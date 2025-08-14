@@ -13,10 +13,14 @@ using NotificationService.Data;
 using NotificationService.Repositories;
 using NotificationService.Services;
 using System.Text;
+using UserService.Admin;
 using UserService.Cloudinaries;
 using UserService.Data;
+using UserService.Model;
+using UserService.Models;
 using UserService.Repositories;
 using UserService.Services;
+using UserService.VerifyEmail;
 
 namespace ChatAppAPI
 {
@@ -25,22 +29,34 @@ namespace ChatAppAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.Configure<CloudinarySettings>(
-    builder.Configuration.GetSection("CloudinarySettings"));
+
 
             builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("UserDbConnection")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("UserDbConnection")));
             builder.Services.AddDbContext<ChatDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ChatDbConnection")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("ChatDbConnection")));
             builder.Services.AddDbContext<NotificationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("NotificationDbConnection")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("NotificationDbConnection")));
+
+
+            builder.Services.Configure<CloudinarySettings>(
+            builder.Configuration.GetSection("CloudinarySettings"));
+            builder.Services.Configure<AdminAccountSettings>(
+            builder.Configuration.GetSection("AdminAccountSettings"));
+            builder.Services.Configure<EmailSettings>(
+            builder.Configuration.GetSection("EmailSettings"));
+
+            builder.Services.AddScoped<EmailSettings>(sp =>
+                sp.GetRequiredService<IOptions<EmailSettings>>().Value);
+            builder.Services.AddSingleton(sp =>
+            sp.GetRequiredService<IOptions<AdminAccountSettings>>().Value);
 
             builder.Services.AddSingleton(provider =>
-{
-    var config = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
-    var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
-    return new Cloudinary(account);
-});
+            {
+            var config = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
+            var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
+            return new Cloudinary(account);
+            });
 
             // Add services to the container.
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -52,10 +68,17 @@ namespace ChatAppAPI
             builder.Services.AddScoped<IChatRepository, ChatRepository>();
             builder.Services.AddScoped<IChatService, ChatService.Services.ChatService>();
             builder.Services.AddScoped<IUploadPhotoService, UploadPhotoService>();
+            builder.Services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
+            builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+            builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+            builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+
+
+            
             // Configure Swagger to generate API documentation
             builder.Services.AddSwaggerGen(c =>
             {
@@ -167,6 +190,33 @@ namespace ChatAppAPI
 
 
             var app = builder.Build();
+
+
+            //seeding admin accouunt
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+                var adminSettings = scope.ServiceProvider
+                                         .GetRequiredService<IOptions<AdminAccountSettings>>()
+                                         .Value;
+
+                // Kiểm tra nếu chưa có admin
+                if (!context.Users.Any(u => u.Email == adminSettings.Email))
+                {
+                    var hashedPassword = BCrypt.Net.BCrypt.HashPassword(adminSettings.Password);
+                    var adminUser = new User
+                    {
+                        Id = Guid.NewGuid(),
+                        Email = adminSettings.Email,
+                        PasswordHash = hashedPassword,
+                        DisplayName = adminSettings.DisplayName,
+                        IsActive = true
+                    };
+
+                    context.Users.Add(adminUser);
+                    context.SaveChanges();
+                }
+            }
 
 
             // Configure the HTTP request pipeline.
