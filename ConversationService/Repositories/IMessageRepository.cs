@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 
 namespace ChatService.Repositories
 {
-    public interface IChatRepository
+    public interface IMessageRepository
     {
-        Task<IEnumerable<Messages>> GetMessagesByRoomIdAsync(Guid ConversationId);
+        Task<IEnumerable<Messages>> GetMessagesByRoomIdAsync(Guid conversationId, int? take = null, DateTime? before = null);
         Task<Messages?> GetMessageByIdAsync(Guid id);
         Task AddMessageAsync(Messages message);
         Task UpdateMessageAsync(Messages message);
         Task DeleteMessageAsync(Guid id);
+        Task SaveChangesAsync();
 
     }
 }

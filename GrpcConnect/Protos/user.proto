@@ -1,0 +1,25 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "UserService.GrpcService";
+
+service UserGrpcService {
+  rpc GetUserById (GetUserByIdRequest) returns (UserResponse);
+  rpc GetUserByEmail (GetUserByEmailRequest) returns (UserResponse);
+}
+
+message GetUserByIdRequest {
+  string userId = 1;
+}
+
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message UserResponse {
+  string id = 1;
+  string email = 2;
+  string displayName = 3;
+  string avatarUrl = 4;
+  bool isActive = 5;
+}
+
