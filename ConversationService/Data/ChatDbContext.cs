@@ -16,5 +16,13 @@ namespace ChatService.Data
         public DbSet<Conversations> Conversations { get; set; }
         public DbSet<Participants> Participants { get; set; }
         public DbSet<Messages> Messages { get; set; }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder
+                    .UseLazyLoadingProxies(); 
+            }
+        }
     }
 }
