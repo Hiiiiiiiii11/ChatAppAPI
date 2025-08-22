@@ -5,6 +5,9 @@ using UserService.Services;
 using UserService.Models;
 using UserService.Model.Request;
 using Microsoft.AspNetCore.Authorization;
+using UserService.GrpcService;
+using UserService.Model.Response;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ChatAppAPI.Controllers.UserAPI
 {
@@ -45,10 +48,24 @@ namespace ChatAppAPI.Controllers.UserAPI
 
                 var createdUser = await _userService.AddUserAsync(userEntity);
 
+                var UserResponse = new UserInfoResponse
+                {
+                    Id = createdUser.Id,
+                    Email = createdUser.Email,
+                    DisplayName =createdUser.DisplayName,
+                    CreatedAt = DateTime.UtcNow,
+                    AvatarUrl = createdUser.AvatarUrl,
+                    IsActive = createdUser.IsActive
+                };
+                    
+
+
+
+
                 return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, new
                 {
                     message = "User created successfully.",
-                    user = createdUser
+                    user = UserResponse
                 });
             }
             catch (Exception ex)
@@ -58,20 +75,38 @@ namespace ChatAppAPI.Controllers.UserAPI
         }
         [Authorize]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserById(Guid id)
+        public async Task<IActionResult> GetUserById(Guid id )
         {
             var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
                 return NotFound(new { message = "User not found." });
+            var userRessponses = new UserInfoResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                DisplayName = user.DisplayName,
+                CreatedAt = DateTime.UtcNow,
+                AvatarUrl = user.AvatarUrl,
+                IsActive = user.IsActive
+            };
 
-            return Ok(user);
+            return Ok(userRessponses);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userService.GetAllUsersAsync();
-            return Ok(users);
+            var userResponses = users.Select(u => new UserInfoResponse
+            {
+                Id = u.Id,
+                Email = u.Email,
+                DisplayName = u.DisplayName,
+                CreatedAt = DateTime.UtcNow,
+                AvatarUrl = u.AvatarUrl,
+                IsActive = u.IsActive
+            });
+            return Ok(userResponses);
         }
         [Authorize]
         [HttpPut("{id}")]
@@ -103,7 +138,7 @@ namespace ChatAppAPI.Controllers.UserAPI
 
             await _userService.UpdateUserAsync(existingUser);
 
-            return Ok(new { message = "User updated successfully" });
+            return Ok(new { message = "User info updated successfully" });
         }
 
 
@@ -121,7 +156,17 @@ namespace ChatAppAPI.Controllers.UserAPI
             if (string.IsNullOrEmpty(request.DisplayName))
                 return BadRequest(new { message = "Search term is required." });
             var users = await _userService.SearchUsersAsync(request.DisplayName);
-            return Ok(users);
+            var userResponse = users.Select(u => new UserInfoResponse
+            {
+                Id = u.Id,
+                DisplayName = u.DisplayName,
+                Email = u.Email,
+                AvatarUrl = u.AvatarUrl,
+                CreatedAt = u.CreatedAt,
+                IsActive = u.IsActive
+
+            });
+            return Ok(userResponse);
         }
         [Authorize(Roles = "Admin")]
         [HttpPut("unactive/{id}")]
