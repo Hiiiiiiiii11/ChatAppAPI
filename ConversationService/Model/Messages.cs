@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ChatService.Models
@@ -14,6 +15,7 @@ namespace ChatService.Models
         public Guid SenderId { get; set; }
         public string Content { get; set; }
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
+        [JsonIgnore]
         public virtual Conversations Conversation { get; set; }
     }
 }

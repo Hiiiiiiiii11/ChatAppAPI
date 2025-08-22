@@ -19,28 +19,25 @@ namespace ChatService.Repositories
         public async Task AddMessageAsync(Messages message)
         {
             await _context.Messages.AddAsync(message);
+            await _context.SaveChangesAsync();
         }
 
-        public Task DeleteMessageAsync(Guid id)
+        public async Task DeleteMessageAsync(Guid id)
         {
-            var message = _context.Messages
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (message != null)
-            {
-                _context.Messages.Remove(message.Result);
-                return _context.SaveChangesAsync();
-            }
-            else
-            {
+            var message = await _context.Messages.FirstOrDefaultAsync(m => m.Id == id);
+            if (message == null)
                 throw new KeyNotFoundException("Message not found.");
-            }
+
+            _context.Messages.Remove(message);
+            await _context.SaveChangesAsync();
         }
 
         public Task<Messages?> GetMessageByIdAsync(Guid id)
         {
             return _context.Messages
-                .Include(m => m.Conversation)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                 .Include(m => m.Conversation)
+                 .AsNoTracking()
+                 .FirstOrDefaultAsync(m => m.Id == id);
         }
 
 
@@ -51,17 +48,16 @@ namespace ChatService.Repositories
         /// </summary>
         public async Task<IEnumerable<Messages>> GetMessagesByRoomIdAsync(Guid conversationId, int? take = null, DateTime? before = null)
         {
-            var query = _context.Messages.AsNoTracking()
-                .Where(m => m.ConversationId == conversationId);
-            if (before.HasValue) {
+            var query = _context.Messages.AsQueryable();
+            query = query.Where(m => m.ConversationId == conversationId);
+            if(before.HasValue)
                 query = query.Where(m => m.SentAt < before.Value);
-            }
-            query = query
-                .OrderByDescending(m => m.SentAt);
-            if(take.HasValue && take > 0) {
+                query = query.OrderByDescending(m => m.SentAt);
+
+            if(take.HasValue && take > 0)
                 query = query.Take(take.Value);
-            }
-            return await query.ToListAsync();
+
+            return await query.AsNoTracking().ToListAsync();
         }
 
 

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ChatService.Models
@@ -15,7 +16,8 @@ namespace ChatService.Models
 
         public bool IsBanned { get; set; } = false;
         public bool IsDeleted { get; set; } = false; // soft delete (xóa chỉ mình tôi)
-
+        public DateTime JoinAt { get; set; } = DateTime.UtcNow;
+        [JsonIgnore]
         public Conversations Conversation { get; set; }
     }
 }

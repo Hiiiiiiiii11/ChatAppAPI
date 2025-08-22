@@ -12,9 +12,9 @@ namespace ChatService.Models
         public string Name { get; set; }
         public bool IsGroup { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public bool IsPrivate { get; set; }
-        public Guid AdminId { get; set; }
-
+        public bool IsPrivateGroup { get; set; }//danh cho open group co the add paticipants
+        public bool IsPrivate { get; set; }//chi danh cho chat 1-1
+        public Guid? AdminId { get; set; }
         public virtual ICollection<Participants> Participants { get; set; } = new List<Participants>();
         public virtual ICollection<Messages> Messages { get; set; } = new List<Messages>();
 

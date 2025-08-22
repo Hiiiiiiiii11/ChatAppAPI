@@ -22,30 +22,32 @@ namespace ChatService.Repositories
             await _context.Conversations.AddAsync(conversation);
         }
 
-        public Task DeleteConversationAsync(Guid id)
+        public async Task DeleteConversationAsync(Guid id)
         {
-            var conversation = _context.Conversations
-                .FirstOrDefaultAsync(c => c.Id == id);
-            if (conversation != null)
-            {
-                _context.Conversations.Remove(conversation.Result);
-                return _context.SaveChangesAsync();
-            }
-            else
-            {
-                throw new KeyNotFoundException("Conversation not found.");
-            }
+            var conversation = await _context.Conversations
+                 .Include(c => c.Participants)
+                 .FirstOrDefaultAsync(c => c.Id == id);
+            _context.Conversations.Remove(conversation);
+            await _context.SaveChangesAsync();
         }
 
         public Task<Conversations?> GetConversationByIdAsync(Guid id)
         {
-            return _context.Conversations.FirstOrDefaultAsync(c => c.Id == id);
+            return _context.Conversations
+                .Include(c => c.Participants)
+                .Include(c => c.Messages)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<IEnumerable<Conversations>> GetUserConversationsAsync(Guid userId)
         {
-            var conversation =  await _context.Conversations.Where(c=>c.Participants.Any(p => p.UserId == userId)).ToListAsync();
-            return conversation;
+            var conversations = await _context.Conversations
+                .Include(c => c.Participants) // load participants
+                .Include(c => c.Messages)     // load messages
+                .Where(c => c.Participants.Any(p => p.UserId == userId))
+                .ToListAsync();
+
+            return conversations;
         }
 
         public Task SaveChangesAsync()

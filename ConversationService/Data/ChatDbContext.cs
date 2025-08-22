@@ -26,3 +26,5 @@ namespace ChatService.Data
         }
     }
 }
+//dotnet ef migrations add addChatDb --project ConversationService --startup-project ChatAppAPI --context ChatDbContext
+// dotnet ef database update --project ConversationService --startup-project ChatAppAPI --context ChatDbContext
