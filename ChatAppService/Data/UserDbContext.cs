@@ -46,3 +46,6 @@ namespace UserService.Data
         }
     }
 }
+// lenh migration
+// dotnet ef migrations add AddRelation --project ChatAppService --startup-project ChatAppAPI --context UserDbContext
+// dotnet ef database update --project ChatAppService --startup-project ChatAppAPI --context UserDbContext
