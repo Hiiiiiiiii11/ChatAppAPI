@@ -17,9 +17,10 @@ namespace ChatService.Repositories
             _context = context;
         }
 
-        public async Task AddConversationAsync(Conversations conversation)
+        public Task AddConversationAsync(Conversations conversation)
         {
-            await _context.Conversations.AddAsync(conversation);
+             _context.Conversations.AddAsync(conversation);
+             return _context.SaveChangesAsync();
         }
 
         public async Task DeleteConversationAsync(Guid id)

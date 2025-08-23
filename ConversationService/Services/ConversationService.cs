@@ -16,40 +16,69 @@ namespace ChatService.Services
             _conversationRepository = conversationRepository;
         }
 
-        public async Task<Conversations> CreateConversationAsync(Conversations conversation, Guid adminId, List<Guid> participantIds)
+        public async Task<Conversations> CreateConversationAsync(Conversations conversation, Guid creatorId, List<Guid> participantIds)
         {
             //neu la chat rieng tu 1-1
-            if(!conversation.IsGroup && conversation.IsPrivate && conversation.Participants.Count == 2)
+            if(!conversation.IsGroup && conversation.IsPrivate)
             {
-                var existing = await _conversationRepository.GetUserConversationsAsync(participantIds[0]);
-                var existingPrivate = existing.FirstOrDefault(c => !c.IsGroup && c.IsPrivate && c.Participants.Count == 2 && c.Participants.All(p => participantIds.Contains(p.UserId)));
-                if (existingPrivate != null)
-                {
-                    return existingPrivate;                
-                }
-                
-            }
-            // thêm người tạo nhóm vào
-            conversation.Participants.Add(new Participants
-            {
-                UserId = adminId,
-                ConversationId = conversation.Id,
-                JoinAt =DateTime.UtcNow
-            });
 
-            
-            // Nếu chưa có thì tạo mới foreach (var userId in participantIds)
-            foreach (var userId in participantIds)
-            {
+                
+                if (participantIds.Count != 1)
+                    throw new InvalidOperationException("Private conversation must be exactly between 2 people.");
+                Guid otherUserId = participantIds.First();
+                //tìm xem giữa 2 ng có đoạn chat hay ko
+                var existing = await _conversationRepository.GetUserConversationsAsync(creatorId);
+                var existingPrivate = existing.FirstOrDefault(c =>
+                !c.IsGroup &&
+                c.IsPrivate &&
+                c.Participants.Count == 2 &&
+                c.Participants.Any(p => p.UserId == creatorId) &&
+                c.Participants.Any(p => p.UserId == otherUserId)
+
+                );
+                //nếu có thì sử dụng 
+                if(existingPrivate != null)
+                {
+                    return existingPrivate;
+                }
+                //nếu chưa có thì tạo mới
                 conversation.Participants.Add(new Participants
                 {
-                    UserId = userId,
-                    ConversationId = conversation.Id,
+                    UserId = creatorId,
                     JoinAt = DateTime.UtcNow
                 });
+                conversation.Participants.Add(new Participants
+                {
+                    UserId = otherUserId,
+                    JoinAt = DateTime.UtcNow
+                });
+                await _conversationRepository.AddConversationAsync(conversation);
+                return conversation;
+
             }
-            await _conversationRepository.AddConversationAsync(conversation);
-            return conversation;
+            if (conversation.IsGroup)
+            {
+                // thêm người tạo nhóm vào
+                conversation.AdminId = creatorId;
+                conversation.Participants.Add(new Participants
+                {
+                    UserId = creatorId,
+                    JoinAt = DateTime.UtcNow
+                });
+                // Nếu chưa có thì tạo mới foreach (var userId in participantIds)
+                foreach (var userId in participantIds)
+                {
+                    conversation.Participants.Add(new Participants
+                    {
+                        UserId = userId,
+                        ConversationId = conversation.Id,
+                        JoinAt = DateTime.UtcNow
+                    });
+                }
+                await _conversationRepository.AddConversationAsync(conversation);
+                return conversation;
+            }
+            throw new InvalidOperationException("Invalid conversation type.");
         }
 
         public async Task DeleteConversationAsync(Guid id)

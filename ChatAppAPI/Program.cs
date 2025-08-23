@@ -79,6 +79,8 @@ namespace ChatAppAPI
             builder.Services.AddScoped<IMessageService, MessageService>();
             builder.Services.AddScoped<UserGrpcClientService>();
             builder.Services.AddScoped<UserGrpcServiceImpl>();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

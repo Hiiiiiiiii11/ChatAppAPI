@@ -9,7 +9,7 @@ namespace ChatService.Models
     public class Conversations
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public bool IsGroup { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsPrivateGroup { get; set; }//danh cho open group co the add paticipants

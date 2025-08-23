@@ -4,6 +4,8 @@ using ChatService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
+using UserService.Models;
+using UserService.Services;
 
 namespace ChatAppAPI.Controllers.ChatAPI
 {
@@ -12,10 +14,12 @@ namespace ChatAppAPI.Controllers.ChatAPI
     public class ConversationController : ControllerBase
     {
         private readonly IConversationService _conversationService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ConversationController(IConversationService conversationService)
+        public ConversationController(IConversationService conversationService, ICurrentUserService currentUserService)
         {
             _conversationService = conversationService;
+            _currentUserService = currentUserService;
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetConversation(Guid id)
@@ -35,28 +39,66 @@ namespace ChatAppAPI.Controllers.ChatAPI
         }
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateConversation([FromBody] ConversationCreateRequest request, [FromQuery] List<Guid> participants)
+        public async Task<IActionResult> CreateConversation([FromQuery] ConversationCreateRequest request, [FromQuery] List<Guid> participants)
         {
 
-            var userIdClaim = User.FindFirst("id");
-            Guid userId = Guid.Parse(userIdClaim.Value);
-            var conversation = new Conversations
+            if (!_currentUserService.Id.HasValue)
             {
-                Name = request.Name,
-                IsGroup = request.IsGroup,
-                IsPrivate = request.IsPrivate,
-                AdminId = request.IsGroup ? userId : null
-            };
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            var currentUserId = _currentUserService.Id.Value;
 
-            var conv = await _conversationService.CreateConversationAsync(conversation , userId, participants);
-            return Ok(conv);
+            // Nếu là private chat thì phải chỉ có đúng 1 participant (ngoài currentUser)
+            if (request.IsPrivate && !request.IsGroup)
+            {
+                if (participants == null || participants.Count != 1)
+                {
+                    return BadRequest(new { message = "Private conversation must include exactly one other participant." });
+                }
+
+                var conversation = new Conversations
+                {
+                    IsGroup = false,
+                    IsPrivate = true,
+                    Name = null,           // private chat ko cần name
+                    AdminId = null         // private chat ko có admin
+                };
+
+                var conv = await _conversationService.CreateConversationAsync(conversation, currentUserId, participants);
+                return Ok(conv);
+            }
+            // Nếu là group chat
+            if (request.IsGroup)
+            {
+                if (string.IsNullOrWhiteSpace(request.Name))
+                {
+                    return BadRequest(new { message = "Group conversation must have a name." });
+                }
+
+                var conversation = new Conversations
+                {
+                    IsGroup = true,
+                    IsPrivate = false,
+                    IsPrivateGroup = request.IsPrivateGroup ? true : false,
+                    Name = request.Name,
+                    AdminId = currentUserId  // người tạo group là admin
+                };
+
+                var conv = await _conversationService.CreateConversationAsync(conversation, currentUserId, participants);
+                return Ok(conv);
+            }
+            return BadRequest(new { message = "Invalid conversation type." });
+
         }
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateConversation(Guid id, [FromQuery] ConversationGroupUpdateRequest request)
         {
-            var userIdClaim = User.FindFirst("id");
-            Guid currentUserId = Guid.Parse(userIdClaim.Value);
+            if(!_currentUserService.Id.HasValue)
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            var currentUserId = _currentUserService.Id.Value;
 
             var conversation = await _conversationService.GetConversationByIdAsync(id);
             if(conversation == null)
@@ -92,8 +134,11 @@ namespace ChatAppAPI.Controllers.ChatAPI
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGroupConversation(Guid id)
         {
-            var userIdClaim = User.FindFirst("id");
-            Guid currentUserId = Guid.Parse(userIdClaim.Value);
+            if (!_currentUserService.Id.HasValue)
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            var currentUserId = _currentUserService.Id.Value;
             var conversation = await _conversationService.GetConversationByIdAsync(id);
             if (conversation == null)
             {
