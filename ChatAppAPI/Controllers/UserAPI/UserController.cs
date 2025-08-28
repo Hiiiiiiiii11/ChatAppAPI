@@ -7,6 +7,7 @@ using UserService.Model.Response;
 using Microsoft.AspNetCore.Http.HttpResults;
 using UserRepository.Model.Request;
 using UserRepository.Models;
+using Share.Services;
 
 namespace ChatAppAPI.Controllers.UserAPI
 {
@@ -18,13 +19,15 @@ namespace ChatAppAPI.Controllers.UserAPI
         private readonly IUploadPhotoService _photoService;
         private readonly IEmailVerificationService _emailVerificationService;
         private readonly IPasswordResetService _passwordResetService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public UserController(IUserService userService, IUploadPhotoService photoService, IEmailVerificationService emailVerificationService, IPasswordResetService passwordResetService)
+        public UserController(IUserService userService, IUploadPhotoService photoService, IEmailVerificationService emailVerificationService, IPasswordResetService passwordResetService,ICurrentUserService currentUserService)
         {
             _userService = userService;
             _photoService = photoService;
             _emailVerificationService = emailVerificationService;
             _passwordResetService = passwordResetService;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost]
@@ -114,6 +117,11 @@ namespace ChatAppAPI.Controllers.UserAPI
             var existingUser = await _userService.GetUserByIdAsync(id);
             if (existingUser == null)
                 return NotFound(new { message = "User not found" });
+
+            //if (!_currentUserService.Id.HasValue)
+            //{
+            //    return Unauthorized(new { message = "User not authenticated" });
+            //}
 
             bool isUpdated = false;
 

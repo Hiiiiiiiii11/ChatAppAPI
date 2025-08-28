@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Helper\Share.csproj" />
     <ProjectReference Include="..\UserRepository\UserRepository.csproj" />
   </ItemGroup>
 </Project>

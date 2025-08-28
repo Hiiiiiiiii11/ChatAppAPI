@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Share.Services;
 using System.Text;
 using UserRepository.Admin;
 using UserRepository.Data;
@@ -81,20 +82,6 @@ namespace ChatAppAPI
             builder.Services.AddEndpointsApiExplorer();
 
             // Thêm gRPC
-            builder.Services.AddGrpc();
-
-
-
-            //builder.Services.AddSingleton(sp =>
-            //{
-            //    var channel = GrpcChannel.ForAddress("https://localhost:5001"); // địa chỉ UserService
-            //    return new UserGrpcService.UserGrpcServiceClient(channel);
-            //});
-
-
-
-
-
 
             // Configure Swagger to generate API documentation
             builder.Services.AddSwaggerGen(c =>

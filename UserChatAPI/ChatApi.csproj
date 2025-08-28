@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ConversationService\ChatService.csproj" />
-    <ProjectReference Include="..\Helper\Helper.csproj" />
+    <ProjectReference Include="..\Helper\Share.csproj" />
   </ItemGroup>
 
 </Project>

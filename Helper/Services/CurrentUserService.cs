@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UserService.Services
+namespace Share.Services
 {
     public class CurrentUserService : ICurrentUserService
     {
@@ -17,7 +17,8 @@ namespace UserService.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public Guid? Id {
+        public Guid? Id
+        {
             get
             {
                 var userId = _httpContextAccessor.HttpContext?.User.FindFirst("id");
