@@ -2,10 +2,11 @@
 using System;
 using System.Threading.Tasks;
 using UserService.Services;
-using UserService.Models;
-using UserService.Model.Request;
 using UserService.Model.Response;
-using UserService.Admin;
+using UserRepository.Admin;
+using UserRepository.Model.Request;
+using UserRepository.Model.Response;
+
 
 namespace ChatAppAPI.Controllers.UserAPI
 {

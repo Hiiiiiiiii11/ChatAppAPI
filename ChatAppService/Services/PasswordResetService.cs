@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UserService.Model;
-using UserService.Repositories;
+using UserRepository.Model;
+using UserRepository.Models;
+using UserRepository.Repositories;
 
 namespace UserService.Services
 {

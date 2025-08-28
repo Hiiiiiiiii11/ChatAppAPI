@@ -1,4 +1,5 @@
-﻿using NotificationService.Model;
+﻿
+using NotificationRepository.Models;
 using NotificationService.Repositories;
 using System;
 using System.Collections.Generic;

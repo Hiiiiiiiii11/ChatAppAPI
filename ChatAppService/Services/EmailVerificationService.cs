@@ -6,9 +6,10 @@ using System.Net;
 using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
-using UserService.Model;
-using UserService.Repositories;
-using UserService.VerifyEmail;
+using UserRepository.VerifyEmail;
+using UserRepository.Repositories;
+using UserRepository.Model;
+using UserRepository.Models;
 
 namespace UserService.Services
 {

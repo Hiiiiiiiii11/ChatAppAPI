@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UserService.Models;
+using UserRepository.Models;
 
 namespace UserService.Services
 {

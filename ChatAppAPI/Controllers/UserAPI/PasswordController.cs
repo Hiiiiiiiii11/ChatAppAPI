@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UserService.Model.Request;
+using UserRepository.Model.Request;
 using UserService.Services;
 
 namespace ChatAppAPI.Controllers.UserAPI

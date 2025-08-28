@@ -1,9 +1,5 @@
 ﻿
 using ChatAppAPI.Jwt;
-using ChatService.Data;
-using ChatService.GrpcService;
-using ChatService.Repositories;
-using ChatService.Services;
 using CloudinaryDotNet;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,19 +7,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using NotificationService.Data;
-using NotificationService.Repositories;
-using NotificationService.Services;
 using System.Text;
-using UserService.Admin;
+using UserRepository.Admin;
+using UserRepository.Data;
+using UserRepository.Models;
+using UserRepository.Repositories;
+using UserRepository.VerifyEmail;
 using UserService.Cloudinaries;
-using UserService.Data;
-using UserService.GrpcService;
-using UserService.Model;
-using UserService.Models;
 using UserService.Repositories;
 using UserService.Services;
-using UserService.VerifyEmail;
 
 namespace ChatAppAPI
 {
@@ -36,10 +28,10 @@ namespace ChatAppAPI
 
             builder.Services.AddDbContext<UserDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("UserDbConnection")));
-            builder.Services.AddDbContext<ChatDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("ChatDbConnection")));
-            builder.Services.AddDbContext<NotificationDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("NotificationDbConnection")));
+            //builder.Services.AddDbContext<ChatDbContext>(options =>
+            //options.UseSqlServer(builder.Configuration.GetConnectionString("ChatDbConnection")));
+            //builder.Services.AddDbContext<NotificationDbContext>(options =>
+            //options.UseSqlServer(builder.Configuration.GetConnectionString("NotificationDbConnection")));
 
 
             builder.Services.Configure<CloudinarySettings>(
@@ -62,9 +54,9 @@ namespace ChatAppAPI
             });
 
             // Add services to the container.
-            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-            builder.Services.AddScoped<INotificationService, NotificationService.Services.NotificationService>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            //builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            //builder.Services.AddScoped<INotificationService, NotificationService.Services.NotificationService>();
+            builder.Services.AddScoped<IUserRepository, UserRepository.Repositories.UserRepository>();
             builder.Services.AddScoped<IUserService,UserService.Services.UserService>();
             builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
             builder.Services.AddScoped<IAuthenticationService, UserService.Services.AuthenticationService>();
@@ -73,14 +65,16 @@ namespace ChatAppAPI
             builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
             builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
-            builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-            builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
-            builder.Services.AddScoped<IConversationService, ConversationService>();
-            builder.Services.AddScoped<IMessageService, MessageService>();
-            builder.Services.AddScoped<UserGrpcClientService>();
-            builder.Services.AddScoped<UserGrpcServiceImpl>();
+            //builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+            //builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+            //builder.Services.AddScoped<IConversationService, ConversationService>();
+            //builder.Services.AddScoped<IMessageService, MessageService>();
+            //builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
+            //builder.Services.AddScoped<IParticipantService, ParticipantService>();
+            //builder.Services.AddScoped<UserGrpcClientService>();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -89,13 +83,14 @@ namespace ChatAppAPI
             // Thêm gRPC
             builder.Services.AddGrpc();
 
-            // Thêm gRPC client
-            builder.Services.AddSingleton(sp =>
-            {
-                var channel = GrpcChannel.ForAddress("https://localhost:5001"); // địa chỉ UserService
-                return new UserGrpcService.UserGrpcServiceClient(channel);
-            });
-            builder.Services.AddScoped<UserGrpcClientService>();
+
+
+            //builder.Services.AddSingleton(sp =>
+            //{
+            //    var channel = GrpcChannel.ForAddress("https://localhost:5001"); // địa chỉ UserService
+            //    return new UserGrpcService.UserGrpcServiceClient(channel);
+            //});
+
 
 
 
@@ -241,8 +236,7 @@ namespace ChatAppAPI
             }
 
             //
-            app.MapGrpcService<UserGrpcServiceImpl>();
-            app.MapGet("/", () => "gRPC User Service is running...");
+
 
 
 

@@ -1,4 +1,5 @@
-﻿using ChatService.Models;
+﻿using ChatRepository.Models;
+using ChatRepository.Repositories;
 using ChatService.Repositories;
 using Microsoft.AspNetCore.Components.Forms;
 using System;

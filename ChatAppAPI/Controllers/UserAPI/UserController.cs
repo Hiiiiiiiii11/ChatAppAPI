@@ -2,12 +2,11 @@
 using System;
 using System.Threading.Tasks;
 using UserService.Services;
-using UserService.Models;
-using UserService.Model.Request;
 using Microsoft.AspNetCore.Authorization;
-using UserService.GrpcService;
 using UserService.Model.Response;
 using Microsoft.AspNetCore.Http.HttpResults;
+using UserRepository.Model.Request;
+using UserRepository.Models;
 
 namespace ChatAppAPI.Controllers.UserAPI
 {

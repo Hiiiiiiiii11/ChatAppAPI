@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using UserService.Services;
 using System.Threading.Tasks;
-using UserService.Model.Request;
+using UserRepository.Model.Request;
 
 namespace ChatAppAPI.Controllers.UserAPI
 {

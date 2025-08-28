@@ -11,7 +11,8 @@ using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using UserService.Models;
+using UserRepository.Models;
+using UserRepository.Repositories;
 using UserService.Repositories;
 
 namespace UserService.Services
