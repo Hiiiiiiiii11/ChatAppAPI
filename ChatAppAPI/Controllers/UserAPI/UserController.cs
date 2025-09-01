@@ -35,40 +35,8 @@ namespace ChatAppAPI.Controllers.UserAPI
         {
             try
             {
-                if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
-                    return BadRequest(new { message = "Email and password are required." });
-                if (!request.Email.Contains("@"))
-                    return BadRequest(new { message = "Invalid email format." });
-                if (!await _emailVerificationService.IsEmailVerifiedAsync(request.Email))
-                    return BadRequest(new { message = "Email chưa được xác thực." });
-                var userEntity = new User
-                {
-                    Email = request.Email,
-                    PasswordHash = request.Password,
-                    DisplayName = request.DisplayName
-                };
-
-                var createdUser = await _userService.AddUserAsync(userEntity);
-
-                var UserResponse = new UserInfoResponse
-                {
-                    Id = createdUser.Id,
-                    Email = createdUser.Email,
-                    DisplayName =createdUser.DisplayName,
-                    CreatedAt = DateTime.UtcNow,
-                    AvatarUrl = createdUser.AvatarUrl,
-                    IsActive = createdUser.IsActive
-                };
-                    
-
-
-
-
-                return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, new
-                {
-                    message = "User created successfully.",
-                    user = UserResponse
-                });
+                var createdUser = await _userService.AddUserAsync(request);
+                return  CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
             }
             catch (Exception ex)
             {
@@ -82,72 +50,47 @@ namespace ChatAppAPI.Controllers.UserAPI
             var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
                 return NotFound(new { message = "User not found." });
-            var userRessponses = new UserInfoResponse
-            {
-                Id = user.Id,
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                CreatedAt = DateTime.UtcNow,
-                AvatarUrl = user.AvatarUrl,
-                IsActive = user.IsActive
-            };
 
-            return Ok(userRessponses);
+            return Ok(user);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userService.GetAllUsersAsync();
-            var userResponses = users.Select(u => new UserInfoResponse
-            {
-                Id = u.Id,
-                Email = u.Email,
-                DisplayName = u.DisplayName,
-                CreatedAt = DateTime.UtcNow,
-                AvatarUrl = u.AvatarUrl,
-                IsActive = u.IsActive
-            });
-            return Ok(userResponses);
+            return Ok(users);
         }
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(Guid id, [FromForm] UpdateUserRequest request)
         {
-            var existingUser = await _userService.GetUserByIdAsync(id);
-            if (existingUser == null)
+            try
+            {
+                if (!_currentUserService.Id.HasValue)
+                {
+                    return Unauthorized(new { message = "User not authenticated" });
+                }
+                if (_currentUserService.Id.Value != id)
+                {
+                    return Unauthorized(new { message = "User not authenticated" }); 
+                }
+                var updatedUser = await _userService.UpdateUserAsync(id, request);
+                return Ok(new
+                {
+                    message = "User info updated successfully",
+                    data = updatedUser
+                });
+            }
+            catch (KeyNotFoundException)
+            {
                 return NotFound(new { message = "User not found" });
-
-            //if (!_currentUserService.Id.HasValue)
-            //{
-            //    return Unauthorized(new { message = "User not authenticated" });
-            //}
-
-            bool isUpdated = false;
-
-            // Update DisplayName nếu có
-            if (!string.IsNullOrEmpty(request.DisplayName))
+            }
+            catch (Exception ex)
             {
-                existingUser.DisplayName = request.DisplayName;
-                isUpdated = true;
+                return BadRequest(new { message = ex.Message });
             }
 
-            // Update Avatar nếu có
-            if (request.AvatarFile != null)
-            {
-                var imageUrl = _photoService.UploadPhotoAsync(request.AvatarFile);
-                existingUser.AvatarUrl = imageUrl;
-                isUpdated = true;
-            }
-
-            if (!isUpdated)
-                return BadRequest(new { message = "No update data provided." });
-
-            await _userService.UpdateUserAsync(existingUser);
-
-            return Ok(new { message = "User info updated successfully" });
         }
-
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
@@ -163,17 +106,7 @@ namespace ChatAppAPI.Controllers.UserAPI
             if (string.IsNullOrEmpty(request.DisplayName))
                 return BadRequest(new { message = "Search term is required." });
             var users = await _userService.SearchUsersAsync(request.DisplayName);
-            var userResponse = users.Select(u => new UserInfoResponse
-            {
-                Id = u.Id,
-                DisplayName = u.DisplayName,
-                Email = u.Email,
-                AvatarUrl = u.AvatarUrl,
-                CreatedAt = u.CreatedAt,
-                IsActive = u.IsActive
-
-            });
-            return Ok(userResponse);
+            return Ok(users);
         }
         [Authorize(Roles = "Admin")]
         [HttpPut("unactive/{id}")]

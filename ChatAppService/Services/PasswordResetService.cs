@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UserRepository.Model;
+using UserRepository.Model.Request;
 using UserRepository.Models;
 using UserRepository.Repositories;
 
@@ -25,9 +26,9 @@ namespace UserService.Services
             _tokenRepo = tokenRepo;
         }
 
-        public async Task RequestPasswordResetAsync(string email)
+        public async Task RequestPasswordResetAsync(PasswordResetRequest request)
         {
-            var user = await _userRepository.GetUserByEmailAsync(email)
+            var user = await _userRepository.GetUserByEmailAsync(request.Email)
                 ?? throw new Exception("Email not found");
 
             var otp = GenerateOtp();
@@ -46,22 +47,22 @@ namespace UserService.Services
             await _emailService.SendPasswordResetCodeAsync(user.Email, otp);
         }
 
-        public async Task ResetPasswordAsync(string email, string otp, string newPassword)
+        public async Task ResetPasswordAsync(ConfirmResetPasswordRequest request)
         {
-            var user = await _userRepository.GetUserByEmailAsync(email)
+            var user = await _userRepository.GetUserByEmailAsync(request.Email)
                 ?? throw new Exception("User not found");
 
-            var token = await _tokenRepo.GetUnusedValidTokenAsync(user.Id, otp)
+            var token = await _tokenRepo.GetUnusedValidTokenAsync(user.Id, request.Otp)
                 ?? throw new Exception("Invalid or expired OTP");
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             await _userRepository.UpdateAsync(user);
 
             token.IsUsed = true;
             await _tokenRepo.UpdateAsync(token);
             await _tokenRepo.SaveChangesAsync();
 
-            await _emailService.SendPasswordChangedNotificationAsync(email);
+            await _emailService.SendPasswordChangedNotificationAsync(request.Email);
         }
 
         private string GenerateOtp()

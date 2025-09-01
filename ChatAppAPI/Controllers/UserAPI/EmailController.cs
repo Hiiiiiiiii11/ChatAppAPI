@@ -26,7 +26,7 @@ namespace ChatAppAPI.Controllers.UserAPI
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOTPRequest request)
         {
-            var result = await _emailVerificationService.VerifyCodeAsync(request.Email, request.Code);
+            var result = await _emailVerificationService.VerifyCodeAsync(request);
             if (!result) return BadRequest(new { message = "Invalid or expired code." });
             return Ok(new { message = "Email verified successfully." });
         }

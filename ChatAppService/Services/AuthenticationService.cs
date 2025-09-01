@@ -1,5 +1,6 @@
 ﻿
 using ChatAppAPI.Jwt;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -11,6 +12,8 @@ using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using UserRepository.Model.Request;
+using UserRepository.Model.Response;
 using UserRepository.Models;
 using UserRepository.Repositories;
 using UserService.Repositories;
@@ -29,26 +32,8 @@ namespace UserService.Services
             _userRepository = userRepository;
             _jwtSettings = jwtOptions.Value;
         }
-        public async Task<User> AuthenticateUserAsync(string email, string password)
-        {
-            var user = await _userRepository.GetUserByEmailAsync(email);
 
-            if (user == null)
-            {
-                throw new InvalidOperationException("User doesn't exist!");
-            }
-
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
-
-            if (!isPasswordValid)
-            {
-                throw new UnauthorizedAccessException("Invalid password!");
-            }
-
-            return user;
-        }
-
-        public string GenerateTokenAsync(User user ,string role)
+        public string GenerateTokenAsync(User user, string role)
         {
             var claims = new[]
             {
@@ -72,6 +57,30 @@ namespace UserService.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<AuthResponse> LoginAsync(LoginUserRequest request, string adminEmail)
+        {
+            var user = await _userRepository.GetUserByEmailAsync(request.Email);
+
+            if (user == null)
+                throw new InvalidOperationException("User doesn't exist!");
+
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+
+            if (!isPasswordValid)
+                throw new UnauthorizedAccessException("Invalid password!");
+
+            if (!user.IsActive)
+                throw new UnauthorizedAccessException("Account is inactive.");
+
+            var role = user.Email == adminEmail ? "Admin" : "User";
+            var token = GenerateTokenAsync(user, role);
+
+            return new AuthResponse
+            {
+                Token = token,
+            };
         }
     }
 }

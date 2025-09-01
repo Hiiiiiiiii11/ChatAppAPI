@@ -1,109 +1,134 @@
-﻿using System;
+﻿using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UserRepository.Model.Request;
 using UserRepository.Models;
 using UserRepository.Repositories;
+using UserService.Model.Response;
 
 namespace UserService.Services
 {
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        public UserService(IUserRepository userRepository)
+        public readonly IUploadPhotoService _uploadPhotoService;
+        public UserService(IUserRepository userRepository, IUploadPhotoService uploadPhotoService)
         {
             _userRepository = userRepository;
+            _uploadPhotoService = uploadPhotoService;
         }
 
 
 
-        public async Task<User> AddUserAsync(User user)
+        public async Task<UserInfoResponse> AddUserAsync(RegisterUserRequest request)
         {
-            var existUser = await _userRepository.GetUserByEmailAsync(user.Email);
-
-            if(existUser != null)
+            var existUser = await _userRepository.GetUserByEmailAsync(request.Email);
+            if (existUser != null)
             {
-                throw new InvalidOperationException($"User with email {user.Email} already exists.");
+                throw new InvalidOperationException($"User with email {request.Email} already exists!");
             }
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+            string harshPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
             var newUser = new User
             {
-                Email = user.Email,
-                PasswordHash = hashedPassword,
-                DisplayName = user.DisplayName,
+                Email = request.Email,
+                PasswordHash = harshPassword,
+                DisplayName =request.DisplayName,
                 CreatedAt = DateTime.UtcNow,
-                AvatarUrl = !string.IsNullOrEmpty(user.AvatarUrl) ? user.AvatarUrl : null,
+                AvatarUrl =null,
                 IsActive = true
+
+
             };
-
             await _userRepository.AddAsync(newUser);
+            return MapToResponse(newUser);
 
-            return newUser; 
         }
+        public async Task<UserInfoResponse?> GetUserByIdAsync(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            return user == null ? null : MapToResponse(user);
+        }
+        public async Task<IEnumerable<UserInfoResponse>> GetAllUsersAsync()
+        {
+            var users = await _userRepository.GetAllAsync();
+            return users.Select(MapToResponse);
+        }
+        public async Task<UserInfoResponse> UpdateUserAsync(Guid id, UpdateUserRequest request)
+        {
+            var existingUser = await _userRepository.GetByIdAsync(id);
+            if (existingUser == null)
+            {
+                throw new KeyNotFoundException("User not found");
+            }
+
+            if (!string.IsNullOrEmpty(request.DisplayName))
+                existingUser.DisplayName = request.DisplayName;
+
+            if ((request.AvatarFile != null))
+            {
+                // Gọi service upload ảnh để lấy link
+                var avatarUrl = _uploadPhotoService.UploadPhotoAsync(request.AvatarFile);
+                existingUser.AvatarUrl = avatarUrl;
+            }
+
+            await _userRepository.UpdateAsync(existingUser);
+            return MapToResponse(existingUser);
+        }
+
 
         public async Task DeleteUserAsync(Guid id)
         {
+            var user = await _userRepository.GetByIdAsync(id);
+            if(user == null)
+            {
+                throw new KeyNotFoundException("User not found");
+            }
             await _userRepository.DeleteAsync(id);
+
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
-        {
-            return await _userRepository.GetAllAsync();
-        }
 
-        public async Task<User?> GetUserByIdAsync(Guid id)
+        public async Task<IEnumerable<UserInfoResponse>> SearchUsersAsync(string searchTerm)
         {
-            return await _userRepository.GetByIdAsync(id);
-        }
-
-        public async Task<IEnumerable<User>> SearchUsersAsync(string searchTerm)
-        {
-            return await _userRepository.GetAllAsync()
-                .ContinueWith(task => task.Result
-                    .Where(u => u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+            var users = await _userRepository.GetAllAsync();
+            return users
+                .Where(u => u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                         || (u.DisplayName != null && u.DisplayName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                .Select(MapToResponse);
         }
 
         public async Task UnActiveUser(Guid id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null)
-            {
-                throw new KeyNotFoundException($"User with id {id} not found.");
-            }
-            if(user.IsActive == false)
-            {
-                throw new Exception("User status is unactive already.");
-            }    
+            var user = await _userRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("User not found.");
+            if (!user.IsActive)
+                throw new Exception("User is already inactive.");
 
             user.IsActive = false;
             await _userRepository.UpdateAsync(user);
         }
+
+       
         public async Task ActiveUser(Guid id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null)
-            {
-                throw new KeyNotFoundException($"User with id {id} not found.");
-            }
-            if (user.IsActive == true)
-            {
-                throw new Exception("User status is active already.");
-            }
+            var user = await _userRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("User not found.");
+            if (!user.IsActive)
+                throw new Exception("User is already active.");
 
             user.IsActive = true;
             await _userRepository.UpdateAsync(user);
         }
 
-        public async Task UpdateUserAsync(User user)
+        private static UserInfoResponse MapToResponse(User user) => new()
         {
-            await _userRepository.UpdateAsync(user);
-        }
-
-        public async Task<User?> GetUserByEmailAsync(string email)
-        {
-            var existUser = await _userRepository.GetUserByEmailAsync(email);
-            return existUser ?? throw new KeyNotFoundException($"User with email {email} not found.");
-        }
+            Id = user.Id,
+            Email = user.Email,
+            DisplayName = user.DisplayName,
+            CreatedAt = user.CreatedAt,
+            AvatarUrl = user.AvatarUrl,
+            IsActive = user.IsActive
+        };
     }
 }

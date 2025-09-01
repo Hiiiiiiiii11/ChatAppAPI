@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Threading.Tasks;
 using UserService.Services;
-using UserService.Model.Response;
 using UserRepository.Admin;
+using Microsoft.AspNetCore.Identity.Data;
 using UserRepository.Model.Request;
-using UserRepository.Model.Response;
+
 
 
 namespace ChatAppAPI.Controllers.UserAPI
@@ -26,30 +25,9 @@ namespace ChatAppAPI.Controllers.UserAPI
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                return BadRequest(new { message = "Username and password are required." });
-            }
-
             try
             {
-                var user = await _authService.AuthenticateUserAsync(request.Username, request.Password);
-                if (user == null)
-                {
-                    return Unauthorized(new { message = "Invalid username or password." });
-                }
-                if (user.IsActive == false)
-                    return Unauthorized(new { message = "Account be unactived." });
-
-                var role = user.Email == _adminAccountSettings.Email ? "Admin" : "User";
-
-                var token = _authService.GenerateTokenAsync(user, role);
-                var response = new AuthResponse
-                {
-                    Token = token,
-
-                };
-
+                var response = await _authService.LoginAsync(request, _adminAccountSettings.Email);
                 return Ok(response);
             }
             catch (InvalidOperationException ex)
@@ -62,7 +40,7 @@ namespace ChatAppAPI.Controllers.UserAPI
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred.", error = ex.Message });
+                return StatusCode(500, new { message = "An error occurred in system.", error = ex.Message });
             }
         }
     }

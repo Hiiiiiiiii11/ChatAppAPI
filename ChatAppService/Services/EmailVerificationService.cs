@@ -10,6 +10,7 @@ using UserRepository.VerifyEmail;
 using UserRepository.Repositories;
 using UserRepository.Model;
 using UserRepository.Models;
+using UserRepository.Model.Request;
 
 namespace UserService.Services
 {
@@ -45,9 +46,9 @@ namespace UserService.Services
                 $"Your OTP is: <b>{otp}</b>. It will expire in 10 minutes.");
         }
 
-        public async Task<bool> VerifyCodeAsync(string email, string code)
+        public async Task<bool> VerifyCodeAsync(VerifyOTPRequest request)
         {
-            var verification = await _emailVerificationRepository.GetByEmailAndCodeAsync(email, code);
+            var verification = await _emailVerificationRepository.GetByEmailAndCodeAsync(request.Email, request.Code);
             if (verification == null) return false;
 
             if (verification.IsVerified) return true; // Đã verify trước đó

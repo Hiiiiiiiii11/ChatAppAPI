@@ -19,14 +19,14 @@ namespace ChatAppAPI.Controllers.UserAPI
         [HttpPost("request")]
         public async Task<IActionResult> RequestReset([FromQuery] PasswordResetRequest request)
         {
-            await _resetService.RequestPasswordResetAsync(request.Email);
+            await _resetService.RequestPasswordResetAsync(request);
             return Ok(new { message = "OTP sent to your email." });
         }
         [Authorize]
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmReset([FromBody] ConfirmResetPasswordRequest request)
         {
-            await _resetService.ResetPasswordAsync(request.Email, request.Otp, request.NewPassword);
+            await _resetService.ResetPasswordAsync(request);
             return Ok(new { message = "Password updated successfully." });
         }
     }
