@@ -1,5 +1,6 @@
 ﻿
 using ChatRepository.Data;
+using ChatRepository.Model.Response;
 using ChatRepository.Models;
 using ChatService.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -58,10 +59,23 @@ namespace ChatRepository.Repositories
             return _context.SaveChangesAsync();
         }
 
+        //public Task<Conversations?> SearchConversationsAsync(Guid userId, string conversationName)
+        //{
+        //    return _context.Conversations.FirstOrDefaultAsync(c => c.Name == conversationName && c.Participants.Any(p => p.UserId == userId));
+        //}
+
+
         public Task UpdateConversationAsync(Conversations conversation)
         {
             _context.Conversations.Update(conversation);
             return _context.SaveChangesAsync();
+        }
+
+        public  Task<List<Conversations>> SearchConversationsAsync(Guid userId, string conversationName)
+        {
+            return _context.Conversations
+         .Where(c => c.Name == conversationName && c.Participants.Any(p => p.UserId == userId))
+         .ToListAsync();
         }
     }
 }

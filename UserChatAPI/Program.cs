@@ -6,12 +6,15 @@ using ChatRepository.Repositories;
 using ChatService.Repositories;
 using ChatService.Services;
 using Grpc.Net.Client;
+using GrpcService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Share.Services;
 using System.Text;
+
 
 
 namespace ChatApi
@@ -40,6 +43,7 @@ namespace ChatApi
             builder.Services.AddScoped<IMessageService, MessageService>();
             builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
             builder.Services.AddScoped<IParticipantService, ParticipantService>();
+            builder.Services.AddScoped<ICurrentUserService,CurrentUserService>();
 
             builder.Services.AddHttpContextAccessor();
 
@@ -51,6 +55,10 @@ namespace ChatApi
 
             // Thêm gRPC
             builder.Services.AddGrpc();
+            builder.Services.AddGrpcClient<UserGrpcService.UserGrpcServiceClient>(o =>
+            {
+                o.Address = new Uri("https://localhost:7216"); // thay port theo UserAPI
+            });
 
 
             // Configure Swagger to generate API documentation

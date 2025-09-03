@@ -3,6 +3,7 @@ using ChatAppAPI.Jwt;
 using CloudinaryDotNet;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -60,7 +61,7 @@ namespace ChatAppAPI
             builder.Services.AddScoped<IUserRepository, UserRepository.Repositories.UserRepository>();
             builder.Services.AddScoped<IUserService,UserService.Services.UserService>();
             builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
-            builder.Services.AddScoped<IAuthenticationService, UserService.Services.AuthenticationService>();
+            builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<IUploadPhotoService, UploadPhotoService>();
             builder.Services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
             builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
@@ -77,11 +78,28 @@ namespace ChatAppAPI
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 
+
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
             // Thêm gRPC
+            builder.Services.AddGrpc();
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                // Port cho REST API (Swagger, Controllers) → HTTP/1.1
+                options.ListenAnyIP(5000, o => o.Protocols = HttpProtocols.Http1);
+
+                // Port cho gRPC → HTTP/2
+                options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2);
+                // HTTPS (dùng dev certificate của ASP.NET)
+                options.ListenAnyIP(7216, o =>
+                {
+                    o.Protocols = HttpProtocols.Http1AndHttp2;
+                    o.UseHttps();
+                });
+            });
+
 
             // Configure Swagger to generate API documentation
             builder.Services.AddSwaggerGen(c =>
@@ -195,6 +213,8 @@ namespace ChatAppAPI
 
             var app = builder.Build();
 
+            app.MapGrpcService<UserGrpcServiceImpl>();
+            app.MapGet("/", () => "User gRPC Service is running");
 
             //seeding admin accouunt
             using (var scope = app.Services.CreateScope())

@@ -1,4 +1,6 @@
-﻿using ChatRepository.Models;
+﻿using ChatRepository.Model.Request;
+using ChatRepository.Model.Response;
+using ChatRepository.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +11,12 @@ namespace ChatService.Services
 {
     public interface IConversationService
     {
-        Task<Conversations?> GetConversationByIdAsync(Guid id);
-        Task<IEnumerable<Conversations>> GetUserConversationsAsync(Guid userId);
-        Task<Conversations> CreateConversationAsync(Conversations conversation, Guid adminId, List<Guid> participantIds);
-        Task UpdateConversationAsync(Conversations conversation);
+        Task<ConversationResponse> GetConversationByIdAsync(Guid id);
+        Task<IEnumerable<ConversationResponse>> GetUserConversationsAsync(Guid userId);
+        Task<ConversationResponse> CreateConversationAsync(ConversationCreateRequest request, Guid creatorId);
+        Task UpdateConversationAsync(Guid id,ConversationUpdateRequest request, Guid adminGroupId);
         Task DeleteConversationAsync(Guid id);
+        Task<IEnumerable<ConversationResponse>> SearchConversationsAsync(Guid userId, string conversationName);
+
     }
 }

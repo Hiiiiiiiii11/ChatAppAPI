@@ -16,5 +16,8 @@ namespace ChatRepository.Repositories
         Task UpdateConversationAsync(Conversations conversation);
         Task DeleteConversationAsync(Guid id);
         Task SaveChangesAsync();
+        //Task<Conversations?> GetPrivateConversationAsync(Guid userId1, Guid userId2);
+        Task<List<Conversations>> SearchConversationsAsync(Guid userId, string conversationName);
+
     }
 }

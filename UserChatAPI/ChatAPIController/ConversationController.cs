@@ -32,6 +32,7 @@ namespace ChatAppAPI.Controllers.ChatAPI
             }
             return Ok(conversation);
         }
+        [Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetUserConversations(Guid userId)
         {
@@ -40,66 +41,26 @@ namespace ChatAppAPI.Controllers.ChatAPI
         }
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateConversation([FromQuery] ConversationCreateRequest request, [FromQuery] List<Guid> participants)
+        public async Task<IActionResult> CreateConversation([FromQuery] ConversationCreateRequest request)
         {
 
             if (!_currentUserService.Id.HasValue)
             {
                 return Unauthorized(new { message = "User not authenticated" });
             }
-            var currentUserId = _currentUserService.Id.Value;
-
-            // Nếu là private chat thì phải chỉ có đúng 1 participant (ngoài currentUser)
-            if (request.IsPrivate && !request.IsGroup)
-            {
-                if (participants == null || participants.Count != 1)
-                {
-                    return BadRequest(new { message = "Private conversation must include exactly one other participant." });
-                }
-
-                var conversation = new Conversations
-                {
-                    IsGroup = false,
-                    IsPrivate = true,
-                    Name = null,           // private chat ko cần name
-                    AdminId = null         // private chat ko có admin
-                };
-
-                var conv = await _conversationService.CreateConversationAsync(conversation, currentUserId, participants);
-                return Ok(conv);
-            }
-            // Nếu là group chat
-            if (request.IsGroup)
-            {
-                if (string.IsNullOrWhiteSpace(request.Name))
-                {
-                    return BadRequest(new { message = "Group conversation must have a name." });
-                }
-
-                var conversation = new Conversations
-                {
-                    IsGroup = true,
-                    IsPrivate = false,
-                    IsPrivateGroup = request.IsPrivateGroup ? true : false,
-                    Name = request.Name,
-                    AdminId = currentUserId  // người tạo group là admin
-                };
-
-                var conv = await _conversationService.CreateConversationAsync(conversation, currentUserId, participants);
-                return Ok(conv);
-            }
-            return BadRequest(new { message = "Invalid conversation type." });
-
+            var creatorId = _currentUserService.Id.Value;
+            var conversation = await _conversationService.CreateConversationAsync(request, creatorId);
+            return CreatedAtAction(nameof(GetConversation), new { id = conversation.Id }, conversation);
         }
         [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateConversation(Guid id, [FromQuery] ConversationGroupUpdateRequest request)
+        public async Task<IActionResult> UpdateConversation(Guid id, [FromForm] ConversationUpdateRequest request)
         {
             if (!_currentUserService.Id.HasValue)
             {
                 return Unauthorized(new { message = "User not authenticated" });
             }
-            var currentUserId = _currentUserService.Id.Value;
+            var adminId = _currentUserService.Id.Value;
 
             var conversation = await _conversationService.GetConversationByIdAsync(id);
             if (conversation == null)
@@ -107,28 +68,12 @@ namespace ChatAppAPI.Controllers.ChatAPI
                 return NotFound(new { message = "Conservation isn't exist" });
             }
             // chỉ admin hiện tại mới có quyền update
-            if (conversation.AdminId != currentUserId)
+            if (conversation.AdminId != adminId)
             {
                 return Unauthorized(new { message = "Only admin can update info on group " });
             }
-            //đổi tên nhóm nếu cần
-            if (!string.IsNullOrEmpty(request.Name))
-            {
-                conversation.Name = request.Name;
-            }
-            conversation.IsPrivateGroup = request.IsPrivateGroup;
+            await _conversationService.UpdateConversationAsync(id, request, adminId);
 
-            //chuyển quyền admin nếu có 
-            if (request.AdminId.HasValue && request.AdminId.Value != conversation.AdminId)
-            {
-                bool isPatcipant = conversation.Participants.Any(p => p.UserId == request.AdminId.Value);
-                if (!isPatcipant)
-                {
-                    return BadRequest(new { message = "The new admin must be a participant of the group." });
-                }
-                conversation.AdminId = request.AdminId.Value;
-            }
-            await _conversationService.UpdateConversationAsync(conversation);
             return Ok(new { message = "Conversation updated successfully" });
         }
         [Authorize]
