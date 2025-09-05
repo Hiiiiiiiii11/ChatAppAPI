@@ -10,7 +10,7 @@ namespace ChatRepository.Repositories
 {
     public interface IConversationRepository
     {
-        Task<Conversations?> GetConversationByIdAsync(Guid id);
+        Task<Conversations> GetConversationByIdAsync(Guid id);
         Task<IEnumerable<Conversations>> GetUserConversationsAsync(Guid userId);
         Task AddConversationAsync(Conversations conversation);
         Task UpdateConversationAsync(Conversations conversation);

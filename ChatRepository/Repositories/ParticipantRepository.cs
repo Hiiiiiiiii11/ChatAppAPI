@@ -17,9 +17,20 @@ namespace ChatRepository.Repositories
             _context = context;
         }
 
-        public async Task AddParticipantAsync(Participants participant)
+        public  Task AddParticipantAsync(Participants participant)
         {
-            await _context.Participants.AddAsync(participant);
+            _context.Participants.AddAsync(participant);
+            return _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Participants>> GetBanChatParticipantsByConversationIdAsync(Guid conversationId)
+        {
+            return await _context.Participants.Where(p => p.ConversationId == conversationId && p.IsBanChat).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Participants>> GetBannedParticipantsByConversationIdAsync(Guid conversationId)
+        {
+            return await _context.Participants.Where(p => p.ConversationId == conversationId && p.IsBanned).ToListAsync();
         }
 
         public Task<Participants?> GetParticipantAsync(Guid conversationId, Guid userId)

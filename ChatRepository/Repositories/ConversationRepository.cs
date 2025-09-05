@@ -35,7 +35,7 @@ namespace ChatRepository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public Task<Conversations?> GetConversationByIdAsync(Guid id)
+        public Task<Conversations> GetConversationByIdAsync(Guid id)
         {
             return _context.Conversations
                 .Include(c => c.Participants)
