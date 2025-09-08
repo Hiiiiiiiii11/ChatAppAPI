@@ -18,7 +18,7 @@ namespace ChatService.Repositories
         {
             _context = context;
         }
-        public async Task AddMessageAsync(Messages message)
+        public async Task SendMessageAsync(Messages message)
         {
             await _context.Messages.AddAsync(message);
             await _context.SaveChangesAsync();
@@ -59,20 +59,58 @@ namespace ChatService.Repositories
             if(take.HasValue && take > 0)
                 query = query.Take(take.Value);
 
-            return await query.AsNoTracking().ToListAsync();
+            return  await query.AsNoTracking().ToListAsync();
         }
-
-
 
         public Task SaveChangesAsync()
         {
             return _context.SaveChangesAsync();
         }
 
-        public Task UpdateMessageAsync(Messages message)
+
+
+        public Task EditMessageAsync(Messages message)
         {
             _context.Messages.Update(message);
             return _context.SaveChangesAsync();
+        }
+
+        public Task DeleteMessageWithAllAsync(Messages message)
+        {
+            _context.Messages.Update(message);
+            return _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteMessageOnlyUserAsync(MessageDeletion deletion)
+        {
+            await _context.MessageDeletions.AddAsync(deletion);
+        }
+
+        public Task DeleteMessageOnlyAdminAsync(Messages message)
+        {
+            _context.Messages.Update(message);
+            return _context.SaveChangesAsync();
+        }
+        public async Task<IEnumerable<Messages>> SearchMessageAsync(Guid conversationId, string keyword, int? take = null, DateTime? before = null)
+        {
+            var query = _context.Messages.AsQueryable();
+            query = query.Where(m => m.ConversationId == conversationId && m.Content.Contains(keyword));
+            if (before.HasValue)
+                query = query.Where(m => m.SentAt < before.Value);
+            query = query.OrderByDescending(m => m.SentAt);
+
+            if (take.HasValue && take > 0)
+                query = query.Take(take.Value);
+
+            return await query.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<MessageDeletion>> GetDeletionsByUserAsync(Guid userId)
+        {
+            return await _context.MessageDeletions
+                .Where(md => md.UserId == userId)
+                .AsNoTracking()
+                .ToListAsync();
         }
     }
 }

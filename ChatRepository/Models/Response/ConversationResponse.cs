@@ -16,6 +16,7 @@ namespace ChatRepository.Model.Response
         public bool IsPrivate { get; set; }//chi danh cho chat 1-1
         public Guid? AdminId { get; set; }
         public bool IsDissolve { get; set; }
+        public string AvartarGroup { get; set; }
         public List<ParticipantResponse> Participants { get; set; } = new();
     }
 }

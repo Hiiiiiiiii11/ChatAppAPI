@@ -100,5 +100,29 @@ namespace ChatAppAPI.Controllers.ChatAPI
 
             return Ok(new { message = "Delete Conversation success" });
         }
+        [Authorize]
+        [HttpPut("dissolve/{id}")]
+        public async Task<IActionResult> DissolveGroupConversation(Guid id)
+        {
+            if (!_currentUserService.Id.HasValue)
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            var currentUserId = _currentUserService.Id.Value;
+            var conversation = await _conversationService.GetConversationByIdAsync(id);
+            if (conversation == null)
+            {
+                return NotFound(new { message = "Conversation not found" });
+            }
+
+            // Nếu là group thì chỉ admin mới có quyền xóa
+            if (conversation.IsGroup && conversation.AdminId != currentUserId)
+            {
+                return Unauthorized(new { message = "Only admin can dissolve this group conversation" });
+            }
+            await _conversationService.DissolveConversationAsync(id);
+
+            return Ok(new { message = "Delete Conversation success" });
+        }
     }
 }

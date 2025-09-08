@@ -15,6 +15,7 @@ namespace ChatRepository.Models
         public bool IsPrivateGroup { get; set; }//danh cho open group co the add paticipants
         public bool IsPrivate { get; set; }//chi danh cho chat 1-1
         public Guid? AdminId { get; set; }
+        public string? AvartarGroup { get; set; }
         public bool IsDissolve { get; set; }// hiển thị nhóm đã giải tán
         //public bool IsHidden { get; set; }// xóa mềm đoạn hội thoai
         public virtual ICollection<Participants> Participants { get; set; } = new List<Participants>();

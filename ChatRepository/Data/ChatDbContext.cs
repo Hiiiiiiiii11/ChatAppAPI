@@ -16,6 +16,7 @@ namespace ChatRepository.Data
         public DbSet<Conversations> Conversations { get; set; }
         public DbSet<Participants> Participants { get; set; }
         public DbSet<Messages> Messages { get; set; }
+        public DbSet<MessageDeletion> MessageDeletions { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -23,6 +24,37 @@ namespace ChatRepository.Data
                 optionsBuilder
                     .UseLazyLoadingProxies(); 
             }
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Messages
+            modelBuilder.Entity<Messages>(entity =>
+            {
+                entity.HasKey(m => m.Id);
+
+                entity.Property(m => m.Content)
+                      .IsRequired()
+                      .HasMaxLength(2000);
+
+                entity.HasMany(m => m.MessageDeletions)
+                      .WithOne(md => md.Message)
+                      .HasForeignKey(md => md.MessageId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // MessageDeletion
+            modelBuilder.Entity<MessageDeletion>(entity =>
+            {
+                entity.HasKey(md => md.Id);
+
+                entity.HasIndex(md => new { md.MessageId, md.UserId })
+                      .IsUnique(); // đảm bảo 1 user chỉ xóa 1 lần với 1 message
+
+                entity.Property(md => md.DeletedAt)
+                      .IsRequired();
+            });
         }
     }
 }

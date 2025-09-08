@@ -1,6 +1,9 @@
 ﻿using ChatRepository.Models;
+using ChatRepository.Models.Request;
 using ChatService.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Share.Services;
 
 namespace ChatAppAPI.Controllers.ChatAPI
 {
@@ -9,40 +12,72 @@ namespace ChatAppAPI.Controllers.ChatAPI
     public class MessageController : ControllerBase
     {
         private readonly IMessageService _messageService;
-        public MessageController(IMessageService messageService) {
+        private readonly ICurrentUserService _currentUserService;
+        public MessageController(IMessageService messageService ,ICurrentUserService currentUserService) {
             _messageService = messageService;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMessage(Guid id)
         {
-            var message = _messageService.GetMessageByIdAsync(id);
+            var message = await _messageService.GetMessageByIdAsync(id);
             if (message == null)
             {
-                return NotFound();
+                return NotFound(new {message ="Message not found"});
             }
             return Ok(message);
         }
+        [Authorize]
         [HttpGet("conversation/{conversationId}")]
         public async Task<IActionResult> GetMessageByRoom(Guid conversationId, [FromQuery] int? take, [FromQuery] DateTime? before)
         {
-            var messages = _messageService.GetMessageByRoomIdAsync(conversationId, take, before);
+            if(!_currentUserService.Id.HasValue)
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }   
+            var currentUserId = _currentUserService.Id.Value;
+            var messages = await _messageService.GetMessageByRoomIdAsync(conversationId, currentUserId, take, before);
             return Ok(messages);
         }
-        [HttpPost]
-        public async Task<IActionResult> CreateMessage([FromBody] Messages message)
+
+        [Authorize]
+        [HttpPost("send")]
+        public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
         {
-            var created = await _messageService.CreateMessageAsync(message);
-            return CreatedAtAction(nameof(GetMessage), new { id = created.Id }, created);
+            if (!_currentUserService.Id.HasValue)
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            try
+            {
+                var senderId = _currentUserService.Id.Value;
+                var message = await _messageService.SendMessageAsync(request, senderId);
+                return Ok(message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMessage(Guid id, [FromBody] Messages message)
+        public async Task<IActionResult> EditMessage(Guid id, [FromBody] EditMessageRequest request)
         {
-            if (id != message.Id) return BadRequest("ID mismatch");
-
-            await _messageService.UpdateMessageAsync(message);
-            return Ok();
+            await _messageService.EditMessageAsync(id, request);
+            return Ok(new {message = "Edit message successfully"});
+        }
+        [HttpDelete("onlyuser/{id}")]
+        public async Task<IActionResult> DeleteMessageOnlyUser(Guid id, [FromQuery] Guid userId)
+        {
+            await _messageService.DeleteMessageOnlyUserAsync(id, userId);
+            return Ok(new { message = "Message deleted for current user" });
+        }
+        [HttpDelete("all/{id}")]
+        public async Task<IActionResult> DeleteMessageWithAll(Guid id)
+        {
+            await _messageService.DeleteMessageWithAllAsync(id);
+            return Ok(new { message = "Message deleted for all users" });
         }
 
         [HttpDelete("{id}")]

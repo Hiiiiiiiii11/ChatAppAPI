@@ -5,6 +5,7 @@ using ChatRepository.Data;
 using ChatRepository.Repositories;
 using ChatService.Repositories;
 using ChatService.Services;
+using CloudinaryDotNet;
 using Grpc.Net.Client;
 using GrpcService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +15,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Share.Services;
 using System.Text;
+using UserService.Cloudinaries;
+using UserService.Services;
 
 
 
@@ -33,8 +36,15 @@ namespace ChatApi
             //builder.Services.AddDbContext<NotificationDbContext>(options =>
             //options.UseSqlServer(builder.Configuration.GetConnectionString("NotificationDbConnection")));
 
+            builder.Services.Configure<CloudinarySettings>(
+            builder.Configuration.GetSection("CloudinarySettings"));
 
-
+            builder.Services.AddSingleton(provider =>
+            {
+                var config = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
+                var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
+                return new Cloudinary(account);
+            });
 
             // Add services to the container.
             builder.Services.AddScoped<IMessageRepository, MessageRepository>();
@@ -44,12 +54,17 @@ namespace ChatApi
             builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
             builder.Services.AddScoped<IParticipantService, ParticipantService>();
             builder.Services.AddScoped<ICurrentUserService,CurrentUserService>();
+            builder.Services.AddScoped<IUploadPhotoService, UploadPhotoService>();
 
             builder.Services.AddHttpContextAccessor();
 
 
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
@@ -163,9 +178,11 @@ namespace ChatApi
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseCors("AllowAll");
 
             app.UseHttpsRedirection();
 

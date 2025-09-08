@@ -15,7 +15,6 @@ namespace ChatRepository.Models
         public Guid ConversationId { get; set; }
 
         public bool IsBanned { get; set; } = false; //chặn thành viên
-        public bool IsDeleted { get; set; } = false; // soft delete (xóa chỉ mình tôi)
         public bool IsBanChat { get; set; } = false; //chặn chat
         public DateTime JoinAt { get; set; } = DateTime.UtcNow;
         [JsonIgnore]

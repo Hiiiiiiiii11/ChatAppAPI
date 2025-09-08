@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="CloudinaryDotNet" Version="1.27.6" />
     <PackageReference Include="Google.Protobuf" Version="3.32.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
     <PackageReference Include="Grpc.Tools" Version="2.72.0">

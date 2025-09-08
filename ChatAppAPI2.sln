@@ -17,6 +17,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService", "NotificationService\NotificationService.csproj", "{D7249816-8004-464A-AB62-48790BB4A298}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UserAPI", "UserAPI", "{7516486D-8601-469D-808A-18BFC00CB624}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ChatAPI", "ChatAPI", "{EDEDD041-66E9-43C8-A9F0-47C0A6EFEC6D}"
 EndProject
