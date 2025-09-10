@@ -3,6 +3,7 @@
 using ChatAppAPI.Jwt;
 using ChatRepository.Data;
 using ChatRepository.Repositories;
+using ChatService.Implement;
 using ChatService.Repositories;
 using ChatService.Services;
 using CloudinaryDotNet;
@@ -73,6 +74,10 @@ namespace ChatApi
             builder.Services.AddGrpcClient<UserGrpcService.UserGrpcServiceClient>(o =>
             {
                 o.Address = new Uri("https://localhost:7216"); // thay port theo UserAPI
+            });
+            builder.Services.AddGrpcClient<NotificationGrpcService.NotificationGrpcServiceClient>(o =>
+            {
+                o.Address = new Uri("https://localhost:7292"); // URL của NotificationService
             });
 
 
@@ -173,7 +178,8 @@ namespace ChatApi
 
 
 
-
+            app.MapGrpcService<ConversationGrpcServiceImpl>();
+            app.MapGrpcService<MessageGrpcServiceImpl>();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

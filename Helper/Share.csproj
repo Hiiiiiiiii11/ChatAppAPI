@@ -8,6 +8,8 @@
 	
 	<ItemGroup>
 		<Protobuf Include="Protos\User.proto" GrpcServices="Both" />
+		<Protobuf Include="Protos\Chat.proto" GrpcServices="Both" />
+		<Protobuf Include="Protos\Notification.proto" GrpcServices="Both" />
 	</ItemGroup>
 
 	<ItemGroup>

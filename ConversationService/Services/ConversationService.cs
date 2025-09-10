@@ -35,7 +35,7 @@ namespace ChatService.Services
                 throw new InvalidOperationException("Invalid conversation type.");
             }
         }
-        private async Task<ConversationResponse> CreatePrivateConversationAsync(ConversationCreateRequest request, Guid creatorId)
+        public async Task<ConversationResponse> CreatePrivateConversationAsync(ConversationCreateRequest request, Guid creatorId)
         {
             if (request.ParticipantIds == null || request.ParticipantIds.Count != 1)
                 throw new InvalidOperationException("Private conversation must be exactly between 2 people.");

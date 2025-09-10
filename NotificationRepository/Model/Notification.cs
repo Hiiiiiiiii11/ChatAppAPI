@@ -10,8 +10,10 @@ namespace NotificationRepository.Models
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public Guid UserId { get; set; }
+        // "System" hoặc "Message"
         public string Type { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
+        public Guid ConversationId { get; set; }
+        public Guid MessageId { get; set; }
         public string? DataJson { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsRead { get; set; } = false;

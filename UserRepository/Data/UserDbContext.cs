@@ -49,5 +49,5 @@ namespace UserRepository.Data
     }
 }
 // lenh migration
-// dotnet ef migrations add AddRelation --project ChatAppService --startup-project ChatAppAPI --context UserDbContext
-// dotnet ef database update --project ChatAppService --startup-project ChatAppAPI --context UserDbContext
+// dotnet ef migrations add addAvartarGroupfix --project ChatRepository --startup-project UserChatAPI --context ChatDbContext
+// dotnet ef database update --project ChatRepository --startup-project UserChatAPI --context ChatDbContext

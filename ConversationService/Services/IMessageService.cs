@@ -14,7 +14,8 @@ namespace ChatService.Services
     {
         Task<MessageResponse?> GetMessageByIdAsync(Guid id);
         Task<IEnumerable<MessageResponse>> GetMessageByRoomIdAsync(Guid conversationId, Guid currentUserId, int? take = null, DateTime? before = null);
-        Task<MessageResponse> SendMessageAsync(SendMessageRequest request, Guid senderId);
+        Task<MessageResponse> SendPrivateMessageAsync(SendPrivateMessageRequest request, Guid senderId);
+        Task<MessageResponse> SendGroupMessageAsync(SendGroupMessageRequest request, Guid senderId);
         Task EditMessageAsync(Guid id,EditMessageRequest request);
         Task DeleteMessageAsync(Guid id);
         Task<IEnumerable<MessageResponse>> SearchMessagesAsync(Guid conversationId, string keyword, int? take = null, DateTime? before = null);

@@ -42,8 +42,8 @@ namespace ChatAppAPI.Controllers.ChatAPI
         }
 
         [Authorize]
-        [HttpPost("send")]
-        public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
+        [HttpPost("sendgroup")]
+        public async Task<IActionResult> SendGroupMessage([FromBody] SendGroupMessageRequest request)
         {
             if (!_currentUserService.Id.HasValue)
             {
@@ -52,7 +52,26 @@ namespace ChatAppAPI.Controllers.ChatAPI
             try
             {
                 var senderId = _currentUserService.Id.Value;
-                var message = await _messageService.SendMessageAsync(request, senderId);
+                var message = await _messageService.SendGroupMessageAsync(request, senderId);
+                return Ok(message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        [Authorize]
+        [HttpPost("sendprivate")]
+        public async Task<IActionResult> SendPrivateMessage([FromBody] SendPrivateMessageRequest request)
+        {
+            if (!_currentUserService.Id.HasValue)
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            try
+            {
+                var senderId = _currentUserService.Id.Value;
+                var message = await _messageService.SendPrivateMessageAsync(request, senderId);
                 return Ok(message);
             }
             catch (Exception ex)

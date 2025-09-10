@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ChatRepository.Models.Request
 {
-    public class SendMessageRequest
+    public class SendPrivateMessageRequest
     {
-        public Guid ConversationId { get; set; }
+        public Guid receiverId { get; set; }
         public string Content { get; set; } = null!;
     }
 }

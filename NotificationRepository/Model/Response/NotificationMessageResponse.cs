@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace NotificationRepository.Model.Response
+{
+    public class NotificationMessageResponse
+    {
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public Guid ConversationId { get; set; }
+        public Guid MessageId { get; set; }
+        public string ConversationName { get; set; }
+        public string ConversationAvatar { get; set; }
+        public string MessageContent { get; set; }
+        public DateTime MessageSentAt { get; set; }
+        public string? DataJson { get; set; }
+        public string Type { get; set; }
+        public bool IsRead { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+}

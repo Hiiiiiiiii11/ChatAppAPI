@@ -1,9 +1,11 @@
-﻿using ChatRepository.Models;
+﻿using ChatRepository.Model.Request;
+using ChatRepository.Models;
 using ChatRepository.Models.Request;
 using ChatRepository.Models.Response;
 using ChatRepository.Repositories;
 using ChatService.Mapping;
 using ChatService.Repositories;
+using GrpcService;
 using Microsoft.AspNetCore.Components.Forms;
 using Share.Services;
 using System;
@@ -18,12 +20,20 @@ namespace ChatService.Services
     {
         private readonly IMessageRepository _messageRepository;
         private readonly IConversationRepository _conversationRepository;
-        public MessageService(IMessageRepository messageRepository, IConversationRepository conversationRepository)
+        private readonly IConversationService _conversationService;
+        private readonly NotificationGrpcService.NotificationGrpcServiceClient _notificationGrpcClient;
+        private readonly UserGrpcService.UserGrpcServiceClient _userGrpcClient;
+        public MessageService(IMessageRepository messageRepository, IConversationRepository conversationRepository, IConversationService conversationService, NotificationGrpcService.NotificationGrpcServiceClient notificationGrpcServiceClient,UserGrpcService.UserGrpcServiceClient userGrpcServiceClient )
         {
             _messageRepository = messageRepository;
-            _conversationRepository = conversationRepository;   
+            _conversationRepository = conversationRepository;
+            _conversationService = conversationService;
+            _notificationGrpcClient = notificationGrpcServiceClient;
+            _userGrpcClient = userGrpcServiceClient;
+
+
         }
-        public async Task<MessageResponse> SendMessageAsync(SendMessageRequest request, Guid senderId)
+        public async Task<MessageResponse> SendGroupMessageAsync(SendGroupMessageRequest request, Guid senderId)
         {
             var conversation = await _conversationRepository.GetConversationByIdAsync(request.ConversationId);
 
@@ -33,7 +43,7 @@ namespace ChatService.Services
             }
 
             // 2. Kiểm tra trạng thái
-            if (conversation.IsDissolve) // hoặc IsActive == false
+            if (conversation.IsDissolve) 
             {
                 throw new Exception("Conversation has been dissolved. Cannot send messages.");
             }
@@ -48,6 +58,51 @@ namespace ChatService.Services
             };
            await _messageRepository.SendMessageAsync(message);
             await _messageRepository.SaveChangesAsync();
+
+            //goi gRPC tạo notification
+            await _notificationGrpcClient.CreateMessageNotificationAsync(new CreateMessageNotificationGrpcRequest
+            {
+                ConversationId = message.ConversationId.ToString(),
+                MessageId = message.Id.ToString()
+            });
+            return message.MessageToResponse();
+        }
+        public async Task<MessageResponse> SendPrivateMessageAsync(SendPrivateMessageRequest request, Guid senderId)
+        {
+            // Tạo conversation riêng (hoặc lấy conversation cũ)
+            var conversationRequest = new ConversationCreateRequest
+            {
+                ParticipantIds = new List<Guid> { request.receiverId }
+            };
+            var receiverReply = await _userGrpcClient.GetUserByIdAsync(new GetUserByIdRequest
+            {
+                Id = request.receiverId.ToString()
+            });
+            if (receiverReply == null)
+            {
+                throw new Exception("User isn't exist");
+            }
+
+            var conversation = await _conversationService.CreatePrivateConversationAsync(conversationRequest, senderId);
+            // Tạo tin nhắn
+            var message = new Messages
+            {
+                Content = request.Content,
+                ConversationId = conversation.Id,
+                SenderId = senderId,
+                SentAt = DateTime.UtcNow,
+                IsEdited = false,
+                IsDeleted = false
+            };
+            await _messageRepository.SendMessageAsync(message);
+            await _messageRepository.SaveChangesAsync();
+
+            //goi gRPC tạo notification
+            await _notificationGrpcClient.CreateMessageNotificationAsync(new CreateMessageNotificationGrpcRequest
+            {
+                ConversationId = message.ConversationId.ToString(),
+                MessageId = message.Id.ToString()
+            });
             return message.MessageToResponse();
         }
 
@@ -136,5 +191,7 @@ namespace ChatService.Services
             await _messageRepository.EditMessageAsync(message);
             await _messageRepository.SaveChangesAsync();
         }
+
+
     }
 }

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NotificationService.Repositories
+namespace NotificationRepository.Repositories
 {
     public class NotificationRepository : INotificationRepository
 
@@ -47,6 +47,11 @@ namespace NotificationService.Repositories
         {
             return await _context.Notifications
                 .FirstOrDefaultAsync(n => n.Id == id);
+        }
+
+        public async Task<List<Notification>> GetByUserIdAsync(Guid userId)
+        {
+            return await _context.Notifications.Where(m => m.UserId == userId && !m.IsRead).ToListAsync();
         }
 
         public async Task UpdateAsync(Notification notification)

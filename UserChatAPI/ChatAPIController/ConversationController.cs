@@ -122,7 +122,7 @@ namespace ChatAppAPI.Controllers.ChatAPI
             }
             await _conversationService.DissolveConversationAsync(id);
 
-            return Ok(new { message = "Delete Conversation success" });
+            return Ok(new { message = "Dissolve Conversation success" });
         }
     }
 }

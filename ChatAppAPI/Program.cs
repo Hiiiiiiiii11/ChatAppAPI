@@ -214,7 +214,6 @@ namespace ChatAppAPI
             var app = builder.Build();
 
             app.MapGrpcService<UserGrpcServiceImpl>();
-            app.MapGet("/", () => "User gRPC Service is running");
 
             //seeding admin accouunt
             using (var scope = app.Services.CreateScope())

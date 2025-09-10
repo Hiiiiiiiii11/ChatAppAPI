@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace NotificationRepository.Model.Response
 {
-    public class NotifiactionResponse
+    public class NotificationResponse
     {
-        public Guid NotificationId { get; set; }
-        public string Type { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
         public string? DataJson { get; set; }
+        public string Type { get; set; }
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
     }
