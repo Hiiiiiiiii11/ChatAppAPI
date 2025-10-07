@@ -175,7 +175,14 @@ namespace ChatApi
 
                 });
             var app = builder.Build();
-
+            if (app.Environment.IsEnvironment("Docker")) // hoặc IsProduction()
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
+                    dbContext.Database.Migrate();
+                }
+            }
 
 
             app.MapGrpcService<ConversationGrpcServiceImpl>();

@@ -240,6 +240,14 @@ namespace ChatAppAPI
                     context.SaveChanges();
                 }
             }
+            if (app.Environment.IsEnvironment("Docker")) // hoặc IsProduction()
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+                    dbContext.Database.Migrate();
+                }
+            }
 
             //
 

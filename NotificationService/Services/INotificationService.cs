@@ -16,6 +16,7 @@ namespace NotificationService.Services
         Task<List<NotificationResponse>> GetNotificationsByUserIdAsync(Guid userId);
         Task<NotificationMessageResponse?> GetNotificationMessageByIdAsync(Guid id);
         Task<List<NotificationMessageResponse>> GetNotificationsMessageByUserIdAsync(Guid userId);
+        Task<List<NotificationMessageResponse>> GetNotificationsSystemByUserIdAsync(Guid userId);
         Task <NotificationResponse> CreateNotificationForUserAsync(CreateUserNotificationRequest request);
 
         Task<NotificationMessageResponse> CreateMessageNotificationAsync(CreateMessageNotificationRequest request);

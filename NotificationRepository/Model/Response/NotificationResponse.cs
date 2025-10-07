@@ -10,6 +10,9 @@ namespace NotificationRepository.Model.Response
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
+        public Guid ConversationId { get; set; }
+        public string ConversationName { get; set; }
+        public string ConversationAvatar { get; set; }
         public string? DataJson { get; set; }
         public string Type { get; set; }
         public bool IsRead { get; set; }

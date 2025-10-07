@@ -4,7 +4,9 @@
 using ChatRepository.Model.Response;
 using ChatRepository.Models;
 using ChatRepository.Repositories;
+using GrpcService;
 using Microsoft.Extensions.Configuration.UserSecrets;
+using System.Text.Json;
 
 namespace ChatService.Services
 {
@@ -12,12 +14,13 @@ namespace ChatService.Services
     {
         private readonly IParticipantRepository _participantRepository;
         private readonly IConversationRepository _conversationRepository;
+        private readonly NotificationGrpcService.NotificationGrpcServiceClient _notificationGrpcServiceClient;
 
-        public ParticipantService(IParticipantRepository participantRepository, IConversationRepository conversationRepository)
+        public ParticipantService(IParticipantRepository participantRepository, IConversationRepository conversationRepository,NotificationGrpcService.NotificationGrpcServiceClient notificationGrpcServiceClient )
         {
             _participantRepository = participantRepository;
             _conversationRepository = conversationRepository;
-            
+            _notificationGrpcServiceClient = notificationGrpcServiceClient;
         }
 
         public async Task<List<Participants>> AddParticipantToConversation(Guid conversationId, List<Guid> userIds)
@@ -47,6 +50,21 @@ namespace ChatService.Services
                 };
                 await _participantRepository.AddParticipantAsync(participant);
                 addedParticipants.Add(participant);
+
+                // 🔔 Tạo thông báo "Tham gia nhóm"
+                await _notificationGrpcServiceClient.CreateUserNotificationAsync(
+                    new CreateUserNotificationGrpcRequest
+                    {
+                        ConversationId = conversation.Id.ToString(),
+                        ReceiverId = userId.ToString(),
+                        Type = "System",
+                        DataJson = JsonSerializer.Serialize(new
+                        {
+                            Title = "Join",
+                            Content = $"You have been added to group '{conversation.Name}'",
+                            GroupId = conversation.Id
+                        })
+                    });
             }
             return addedParticipants;
         }

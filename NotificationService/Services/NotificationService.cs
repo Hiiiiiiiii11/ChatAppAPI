@@ -37,7 +37,6 @@ namespace NotificationService.Services
                 UserId = request.receiverId,
                 Type = "System",
                 ConversationId = request.ConversationId,
-                MessageId = request.MessageId,
                 DataJson = request.DataJson,
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
@@ -47,18 +46,13 @@ namespace NotificationService.Services
             {
                 Id = notification.Id,
                 UserId = notification.UserId,
-                //ConversationId = notification.ConversationId,
-                //MessageId = notification.MessageId,
                 Type = notification.Type,
                 DataJson = notification.DataJson,
                 CreatedAt = notification.CreatedAt,
                 IsRead = notification.IsRead,
-                //ConversationName = string.Empty,     // có thể fill sau từ gRPC
-                //ConversationAvatar = string.Empty,   // có thể fill sau từ gRPC
-                //MessageContent = string.Empty,       // có thể fill sau từ gRPC
-                //MessageSentAt = DateTime.UtcNow      // có thể fill sau từ gRPC
             };
         }
+
 
         //public async Task<NotificationMessageResponse> CreateMessageNotificationAsync(CreateMessageNotificationRequest request)
         //{
@@ -339,6 +333,14 @@ namespace NotificationService.Services
             var notifications = await _notificationRepository.GetByUserIdAsync(userId);
             return notifications
                 .Where(n => n.Type == "Message")
+                .Select(n => n.ToMessageResponse())
+                .ToList();
+        }
+        public async Task<List<NotificationMessageResponse>> GetNotificationsSystemByUserIdAsync(Guid userId)
+        {
+            var notifications = await _notificationRepository.GetByUserIdAsync(userId);
+            return notifications
+                .Where(n => n.Type == "System")
                 .Select(n => n.ToMessageResponse())
                 .ToList();
         }

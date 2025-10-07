@@ -142,6 +142,14 @@ namespace NotificationApi
 
 
             var app = builder.Build();
+            if (app.Environment.IsEnvironment("Docker")) // hoặc IsProduction()
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+                    dbContext.Database.Migrate();
+                }
+            }
             //đăng ký gRPC service
             app.MapGrpcService<NotificationGrpcServiceImpl>();
 

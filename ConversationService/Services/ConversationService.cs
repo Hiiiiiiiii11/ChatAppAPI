@@ -3,6 +3,7 @@ using ChatRepository.Model.Response;
 using ChatRepository.Models;
 using ChatRepository.Repositories;
 using GrpcService;
+using System.Text.Json;
 using UserService.Services;
 
 namespace ChatService.Services
@@ -12,11 +13,13 @@ namespace ChatService.Services
         private readonly IConversationRepository _conversationRepository;
         private readonly UserGrpcService.UserGrpcServiceClient _userGrpcClient;
         private readonly IUploadPhotoService _uploadPhotoService;
-        public ConversationService(IConversationRepository conversationRepository, UserGrpcService.UserGrpcServiceClient userGrpcServiceClient,IUploadPhotoService uploadPhotoService)
+        private readonly NotificationGrpcService.NotificationGrpcServiceClient _notificationGrpcServiceClient;
+        public ConversationService(IConversationRepository conversationRepository, UserGrpcService.UserGrpcServiceClient userGrpcServiceClient,IUploadPhotoService uploadPhotoService, NotificationGrpcService.NotificationGrpcServiceClient notificationGrpcServiceClient)
         {
             _conversationRepository = conversationRepository;
             _userGrpcClient = userGrpcServiceClient;
             _uploadPhotoService = uploadPhotoService;
+            _notificationGrpcServiceClient = notificationGrpcServiceClient;
         }
 
 
@@ -81,7 +84,7 @@ namespace ChatService.Services
             return await MapToResponse(conversation, creatorId);
         }
 
-        private async Task<ConversationResponse>CreateGroupConversationAsync(ConversationCreateRequest request, Guid creatorId)
+        private async Task<ConversationResponse> CreateGroupConversationAsync(ConversationCreateRequest request, Guid creatorId)
         {
             var conversation = new Conversations
             {
@@ -101,7 +104,7 @@ namespace ChatService.Services
                 UserId = creatorId,
                 JoinAt = DateTime.UtcNow
             });
-
+            var newUserIds = new List<Guid>();
             //add other participants
             if (request.ParticipantIds != null)
             {
@@ -118,7 +121,27 @@ namespace ChatService.Services
                 }
             }
             await _conversationRepository.AddConversationAsync(conversation);
+            // 🔔 Gửi thông báo cho từng user được thêm
+            foreach (var userId in newUserIds)
+            {
+                await _notificationGrpcServiceClient.CreateUserNotificationAsync(
+                    new CreateUserNotificationGrpcRequest
+                    {
+                        ConversationId = conversation.Id.ToString(),
+                        ReceiverId = userId.ToString(),
+                        Type = "System",
+                        DataJson = JsonSerializer.Serialize(new
+                        {
+                            Title = "Join",
+                            Content = $"You have been added to group '{conversation.Name}'",
+                            GroupId = conversation.Id
+                        })
+                    });
+            }
             return await MapToResponse(conversation, creatorId);
+
+          
+
         }
 
         public async Task DeleteConversationAsync(Guid id)

@@ -41,6 +41,18 @@ namespace NotificationApi.Controllers
             var notifications = await _notificationService.GetNotificationsByUserIdAsync(userId);
             return Ok(notifications);
         }
+        [HttpGet("user/message/{userId}")]
+        public async Task<IActionResult> GetNotificationsMessageByUserId(Guid userId)
+        {
+            var notifications = await _notificationService.GetNotificationsMessageByUserIdAsync(userId);
+            return Ok(notifications);
+        }
+        [HttpGet("user/system/{userId}")]
+        public async Task<IActionResult> GetNotificationsSystemByUserId(Guid userId)
+        {
+            var notifications = await _notificationService.GetNotificationsSystemByUserIdAsync(userId);
+            return Ok(notifications);
+        }
         // Tạo thông báo khi có tin nhắn mới
         [HttpPost("message")]
         public async Task<ActionResult<NotificationMessageResponse>> CreateMessageNotification([FromBody] CreateMessageNotificationRequest request)

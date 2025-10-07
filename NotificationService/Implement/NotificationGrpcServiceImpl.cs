@@ -45,5 +45,31 @@ namespace NotificationService.Implement
             };
 
         }
+        public override async Task<NotificationMessageGrpcResponse> CreateUserNotification(CreateUserNotificationGrpcRequest request, ServerCallContext context)
+        {
+            var result = await _notificationService.CreateNotificationForUserAsync(new CreateUserNotificationRequest
+            {
+                ConversationId = Guid.Parse(request.ConversationId),
+                receiverId = Guid.Parse(request.ReceiverId),
+                Type = request.Type,
+                DataJson = request.DataJson
+            });
+
+            return new NotificationMessageGrpcResponse
+            {
+                Id = result.Id.ToString(),
+                UserId = result.UserId.ToString(),
+                ConversationId = result.ConversationId.ToString(),
+                MessageId = "", // System notification không có messageId
+                Type = result.Type,
+                DataJson = result.DataJson ?? "",
+                CreatedAt = result.CreatedAt.ToString("O"),
+                IsRead = result.IsRead,
+                ConversationName = result.ConversationName,
+                ConversationAvatar = result.ConversationAvatar,
+                MessageContent = "",
+                MessageSentAt = ""
+            };
+        }
     }
 }
