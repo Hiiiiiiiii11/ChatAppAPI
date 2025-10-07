@@ -1,0 +1,35 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "GrpcService";
+
+// -------- Conversation -------------
+message GetConversationByIdRequest {
+  string id = 1;
+}
+
+message ConversationReply {
+  string id = 1;
+  string name = 2;
+  string avartarGroup = 3;
+  repeated string members = 4;
+}
+
+service ConversationGrpcService {
+  rpc GetConversationById (GetConversationByIdRequest) returns (ConversationReply);
+}
+
+// -------- Message -----------------
+message GetMessageByIdRequest {
+  string id = 1;
+}
+
+message MessageReply {
+  string id = 1;
+  string senderId = 2;
+  string content = 3;
+  string sentAt = 4;
+}
+
+service MessageGrpcService {
+  rpc GetMessageById (GetMessageByIdRequest) returns (MessageReply);
+}

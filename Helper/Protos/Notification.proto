@@ -1,0 +1,34 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "GrpcService";
+// ----------- Request tạo thông báo tin nhắn -------------
+message CreateMessageNotificationGrpcRequest {
+  string conversationId = 1;
+  string messageId = 2;
+}
+
+// ----------- Request tạo thông báo user (ví dụ: tham gia nhóm) -------------
+message CreateUserNotificationGrpcRequest {
+  string conversationId = 1;
+  string receiverId = 2;
+  string type = 3; // "System", "Invite", ...
+  string dataJson = 4;
+}
+message NotificationMessageGrpcResponse {
+  string id = 1;
+  string userId = 2;
+  string conversationId = 3;
+  string messageId = 4;
+  string type = 5;
+  string dataJson = 6;
+  string createdAt = 7;
+  bool isRead = 8;
+  string conversationName = 9;
+  string conversationAvatar = 10;
+  string messageContent = 11;
+  string messageSentAt = 12;
+}
+service NotificationGrpcService {
+  rpc CreateMessageNotification (CreateMessageNotificationGrpcRequest) returns (NotificationMessageGrpcResponse);
+  rpc CreateUserNotification (CreateUserNotificationGrpcRequest) returns (NotificationMessageGrpcResponse);
+}

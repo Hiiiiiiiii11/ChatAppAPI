@@ -1,20 +1,21 @@
 ﻿
 using ChatAppAPI.Jwt;
-using ChatService.Data;
-using ChatService.Repositories;
-using ChatService.Services;
 using CloudinaryDotNet;
+using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using NotificationService.Data;
-using NotificationService.Repositories;
-using NotificationService.Services;
+using Share.Services;
 using System.Text;
+using UserRepository.Admin;
+using UserRepository.Data;
+using UserRepository.Models;
+using UserRepository.Repositories;
+using UserRepository.VerifyEmail;
 using UserService.Cloudinaries;
-using UserService.Data;
 using UserService.Repositories;
 using UserService.Services;
 
@@ -25,37 +26,81 @@ namespace ChatAppAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.Configure<CloudinarySettings>(
-    builder.Configuration.GetSection("CloudinarySettings"));
+
 
             builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("UserDbConnection")));
-            builder.Services.AddDbContext<ChatDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ChatDbConnection")));
-            builder.Services.AddDbContext<NotificationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("NotificationDbConnection")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("UserDbConnection")));
+            //builder.Services.AddDbContext<ChatDbContext>(options =>
+            //options.UseSqlServer(builder.Configuration.GetConnectionString("ChatDbConnection")));
+            //builder.Services.AddDbContext<NotificationDbContext>(options =>
+            //options.UseSqlServer(builder.Configuration.GetConnectionString("NotificationDbConnection")));
+
+
+            builder.Services.Configure<CloudinarySettings>(
+            builder.Configuration.GetSection("CloudinarySettings"));
+            builder.Services.Configure<AdminAccountSettings>(
+            builder.Configuration.GetSection("AdminAccountSettings"));
+            builder.Services.Configure<EmailSettings>(
+            builder.Configuration.GetSection("EmailSettings"));
+
+            builder.Services.AddScoped<EmailSettings>(sp =>
+                sp.GetRequiredService<IOptions<EmailSettings>>().Value);
+            builder.Services.AddSingleton(sp =>
+            sp.GetRequiredService<IOptions<AdminAccountSettings>>().Value);
 
             builder.Services.AddSingleton(provider =>
-{
-    var config = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
-    var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
-    return new Cloudinary(account);
-});
+            {
+            var config = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
+            var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
+            return new Cloudinary(account);
+            });
 
             // Add services to the container.
-            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-            builder.Services.AddScoped<INotificationService, NotificationService.Services.NotificationService>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            //builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            //builder.Services.AddScoped<INotificationService, NotificationService.Services.NotificationService>();
+            builder.Services.AddScoped<IUserRepository, UserRepository.Repositories.UserRepository>();
             builder.Services.AddScoped<IUserService,UserService.Services.UserService>();
             builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
-            builder.Services.AddScoped<IAuthenticationService, UserService.Services.AuthenticationService>();
-            builder.Services.AddScoped<IChatRepository, ChatRepository>();
-            builder.Services.AddScoped<IChatService, ChatService.Services.ChatService>();
+            builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<IUploadPhotoService, UploadPhotoService>();
+            builder.Services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
+            builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+            builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+            builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+            //builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+            //builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+            //builder.Services.AddScoped<IConversationService, ConversationService>();
+            //builder.Services.AddScoped<IMessageService, MessageService>();
+            //builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
+            //builder.Services.AddScoped<IParticipantService, ParticipantService>();
+            //builder.Services.AddScoped<UserGrpcClientService>();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+
+            // Thêm gRPC
+            builder.Services.AddGrpc();
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                // Port cho REST API (Swagger, Controllers) → HTTP/1.1
+                options.ListenAnyIP(5000, o => o.Protocols = HttpProtocols.Http1);
+
+                // Port cho gRPC → HTTP/2
+                options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2);
+                // HTTPS (dùng dev certificate của ASP.NET)
+                options.ListenAnyIP(7216, o =>
+                {
+                    o.Protocols = HttpProtocols.Http1AndHttp2;
+                    o.UseHttps();
+                });
+            });
+
+
             // Configure Swagger to generate API documentation
             builder.Services.AddSwaggerGen(c =>
             {
@@ -167,6 +212,46 @@ namespace ChatAppAPI
 
 
             var app = builder.Build();
+
+            app.MapGrpcService<UserGrpcServiceImpl>();
+
+            //seeding admin accouunt
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+                var adminSettings = scope.ServiceProvider
+                                         .GetRequiredService<IOptions<AdminAccountSettings>>()
+                                         .Value;
+
+                // Kiểm tra nếu chưa có admin
+                if (!context.Users.Any(u => u.Email == adminSettings.Email))
+                {
+                    var hashedPassword = BCrypt.Net.BCrypt.HashPassword(adminSettings.Password);
+                    var adminUser = new User
+                    {
+                        Id = Guid.NewGuid(),
+                        Email = adminSettings.Email,
+                        PasswordHash = hashedPassword,
+                        DisplayName = adminSettings.DisplayName,
+                        IsActive = true
+                    };
+
+                    context.Users.Add(adminUser);
+                    context.SaveChanges();
+                }
+            }
+            if (app.Environment.IsEnvironment("Docker")) // hoặc IsProduction()
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+                    dbContext.Database.Migrate();
+                }
+            }
+
+            //
+
+
 
 
             // Configure the HTTP request pipeline.
