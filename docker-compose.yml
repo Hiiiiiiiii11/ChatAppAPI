@@ -1,4 +1,6 @@
-﻿services:
+﻿
+
+services:
   nginx:
     image: nginx:latest
     container_name: nginx
@@ -76,6 +78,8 @@
   certbot:
     image: certbot/certbot
     container_name: certbot
+    depends_on:
+      - nginx
     volumes:
       - ./certs:/etc/letsencrypt
       - ./www:/var/www/certbot
@@ -85,7 +89,11 @@
       -d chat.fastchat1005.xyz
       -d notification.fastchat1005.xyz
       -d user.fastchat1005.xyz
-      --email hqhuyzzz012@gmail.com --agree-tos --no-eff-email --non-interactive"
+      --email hqhuyzzz012@gmail.com
+      --agree-tos
+      --no-eff-email
+      --non-interactive
+      --verbose"
 
 networks:
   backend:
