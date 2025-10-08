@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		appsetting.Doker.json = appsetting.Doker.json
 		docker-compose.yml = docker-compose.yml
+		nginx.conf = nginx.conf
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserService", "ChatAppService\UserService.csproj", "{968B52B4-BF22-412B-802D-6272ADCECEEF}"
@@ -40,15 +41,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helper", "Helper", "{52680705-6990-4A03-B54E-CE3A393D9153}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Share", "Helper\Share.csproj", "{5A41BD6E-8DB9-4A74-8CB5-CF3CCBE2F56C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nginx", "nginx", "{A4EF26DA-B568-4138-A109-10C4FA4D934C}"
-	ProjectSection(SolutionItems) = preProject
-		nginx.conf = nginx.conf
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "www", "www", "{ECD3FDE4-72E9-48B1-A04D-E96F4A2B9A96}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "certbot", "certbot", "{D55A8CF3-19D7-43A2-92DC-F825753F3FB2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,8 +103,5 @@ Global
 		{48885EE7-4CD9-4900-BEE0-511106496E1F} = {88CEB626-A5F7-4A77-9499-5EB45608054D}
 		{D9E7A8FD-8DBC-4F8A-831F-10C29FB6B5AA} = {88CEB626-A5F7-4A77-9499-5EB45608054D}
 		{5A41BD6E-8DB9-4A74-8CB5-CF3CCBE2F56C} = {52680705-6990-4A03-B54E-CE3A393D9153}
-		{A4EF26DA-B568-4138-A109-10C4FA4D934C} = {73696354-B9C8-4CFC-A2B9-74F5BC4D703F}
-		{ECD3FDE4-72E9-48B1-A04D-E96F4A2B9A96} = {73696354-B9C8-4CFC-A2B9-74F5BC4D703F}
-		{D55A8CF3-19D7-43A2-92DC-F825753F3FB2} = {ECD3FDE4-72E9-48B1-A04D-E96F4A2B9A96}
 	EndGlobalSection
 EndGlobal
