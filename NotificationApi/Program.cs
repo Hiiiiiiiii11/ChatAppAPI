@@ -77,17 +77,38 @@ namespace NotificationApi
             });
             //đăng ký gRPC client
             builder.Services.AddGrpc();
-            builder.Services.AddGrpcClient < MessageGrpcService.MessageGrpcServiceClient> (o =>
+            var grpcSettings = builder.Configuration.GetSection("GrpcServices");
+
+            string GetGrpcUrl(string key)
             {
-                o.Address = new Uri("https://localhost:7227"); // thay port theo ChatAPI
+                // Lấy từ env var trước, nếu có thì dùng
+                var envKey = key.Replace("Api", "").ToUpper() + "_URL"; // USERAPI_URL, CHATAPI_URL, NOTIFICATIONAPI_URL
+                var url = Environment.GetEnvironmentVariable(envKey);
+                if (!string.IsNullOrEmpty(url))
+                    return url;
+
+                // Fallback sang appsettings.json
+                var cfg = grpcSettings[key];
+                if (string.IsNullOrEmpty(cfg))
+                    throw new Exception($"GrpcService URL for {key} not configured");
+
+                return cfg;
+            }
+
+            // Thay vì hardcode
+            builder.Services.AddGrpcClient<MessageGrpcService.MessageGrpcServiceClient>(o =>
+            {
+                o.Address = new Uri(GetGrpcUrl("ChatApi"));
             });
+
             builder.Services.AddGrpcClient<ConversationGrpcService.ConversationGrpcServiceClient>(o =>
             {
-                o.Address = new Uri("https://localhost:7227"); // thay port theo ChatAPI
+                o.Address = new Uri(GetGrpcUrl("ChatApi"));
             });
+
             builder.Services.AddGrpcClient<UserGrpcService.UserGrpcServiceClient>(o =>
             {
-                o.Address = new Uri("https://localhost:7216"); // thay port theo UserAPI
+                o.Address = new Uri(GetGrpcUrl("UserApi"));
             });
 
             //dang ký Jwt

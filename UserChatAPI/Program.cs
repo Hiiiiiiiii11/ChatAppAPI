@@ -71,14 +71,31 @@ namespace ChatApi
 
             // Thêm gRPC
             builder.Services.AddGrpc();
+
+            // Hàm lấy URL gRPC (ưu tiên environment variable, fallback appsettings.json)
+            string GetGrpcUrl(string key)
+            {
+                // key ví dụ: "UserApi" -> env var: "USERAPI_URL"
+                var envKey = key.Replace("Api", "").ToUpper() + "_URL";
+                var url = Environment.GetEnvironmentVariable(envKey);
+                if (!string.IsNullOrEmpty(url))
+                    return url;
+
+                // fallback appsettings.json
+                var cfg = builder.Configuration.GetSection("GrpcServices")[key];
+                return cfg;
+            }
+
+            // Đăng ký gRPC clients
             builder.Services.AddGrpcClient<UserGrpcService.UserGrpcServiceClient>(o =>
             {
-                o.Address = new Uri("https://localhost:7216"); // thay port theo UserAPI
+                o.Address = new Uri(GetGrpcUrl("UserApi"));
             });
             builder.Services.AddGrpcClient<NotificationGrpcService.NotificationGrpcServiceClient>(o =>
             {
-                o.Address = new Uri("https://localhost:7292"); // URL của NotificationService
+                o.Address = new Uri(GetGrpcUrl("NotificationApi"));
             });
+
 
 
             // Configure Swagger to generate API documentation
