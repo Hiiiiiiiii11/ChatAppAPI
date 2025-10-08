@@ -167,9 +167,27 @@ namespace NotificationApi
             {
                 using (var scope = app.Services.CreateScope())
                 {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
-                    dbContext.Database.Migrate();
+                    var services = scope.ServiceProvider;
+
+                    try
+                    {
+                        var dbContext = services.GetRequiredService<NotificationDbContext>();
+
+                        // Chỉ migrate nếu chạy trong Docker hoặc Production
+                        if (app.Environment.IsEnvironment("Docker") || app.Environment.IsProduction())
+                        {
+                            dbContext.Database.Migrate();
+                            Console.WriteLine("✅ Database has been migrated successfully.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"❌ An error occurred while migrating the database: {ex.Message}");
+                        // Bạn có thể log thêm stacktrace nếu cần
+                        Console.WriteLine(ex.StackTrace);
+                    }
                 }
+
             }
             //đăng ký gRPC service
             app.MapGrpcService<NotificationGrpcServiceImpl>();
