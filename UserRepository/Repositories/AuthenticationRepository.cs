@@ -19,7 +19,7 @@ namespace UserRepository.Repositories
         {
             _context = context;
         }
-        public Task<User> GetUserByEmailAsync(string email)
+        public Task<User?> GetUserByEmailAsync(string email)
         {
             return _context.Users
                 .FirstOrDefaultAsync(u => u.Email == email);
