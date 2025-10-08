@@ -1,5 +1,4 @@
-﻿# docker-compose.yml
-services:
+﻿services:
   nginx:
     image: nginx:latest
     container_name: nginx
@@ -25,8 +24,8 @@ services:
     container_name: chatapi
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=ChatDb;User Id=sa;Password=Your_strong_password123;
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ConnectionStrings__DefaultConnection=${CHAT_DB_CONNECTION}
     depends_on:
       - db
     networks:
@@ -39,8 +38,8 @@ services:
     container_name: notificationapi
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=NotificationDb;User Id=sa;Password=Your_strong_password123;
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ConnectionStrings__DefaultConnection=${NOTIFICATION_DB_CONNECTION}
     depends_on:
       - db
     networks:
@@ -53,8 +52,8 @@ services:
     container_name: userapi
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=UserDb;User Id=sa;Password=Your_strong_password123;
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ConnectionStrings__DefaultConnection=${USER_DB_CONNECTION}
     depends_on:
       - db
     networks:
@@ -65,8 +64,8 @@ services:
     container_name: sqlserver
     restart: always
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=Your_strong_password123
+      - ACCEPT_EULA=${ACCEPT_EULA}
+      - SA_PASSWORD=${SA_PASSWORD}
     ports:
       - "1433:1433"
     volumes:
