@@ -24,8 +24,8 @@
     container_name: chatapi
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - ConnectionStrings__DefaultConnection=${CHAT_DB_CONNECTION}
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ChatDb;User Id=sa;Password=Your_strong_password123;
     depends_on:
       - db
     networks:
@@ -38,8 +38,8 @@
     container_name: notificationapi
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - ConnectionStrings__DefaultConnection=${NOTIFICATION_DB_CONNECTION}
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=db;Database=NotificationDb;User Id=sa;Password=Your_strong_password123;
     depends_on:
       - db
     networks:
@@ -52,8 +52,8 @@
     container_name: userapi
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - ConnectionStrings__DefaultConnection=${USER_DB_CONNECTION}
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=db;Database=UserDb;User Id=sa;Password=Your_strong_password123;
     depends_on:
       - db
     networks:
@@ -64,8 +64,8 @@
     container_name: sqlserver
     restart: always
     environment:
-      - ACCEPT_EULA=${ACCEPT_EULA}
-      - SA_PASSWORD=${SA_PASSWORD}
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Your_strong_password123
     ports:
       - "1433:1433"
     volumes:
