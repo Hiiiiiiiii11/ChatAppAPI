@@ -1,0 +1,7 @@
+{
+  "GrpcServices": {
+    "ChatApi": "http://chatapi:8080",
+    "UserApi": "http://userapi:8080",
+    "NotificationApi": "http://notificationapi:8080"
+  }
+}

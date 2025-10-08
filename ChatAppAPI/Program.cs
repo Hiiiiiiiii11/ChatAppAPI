@@ -85,20 +85,19 @@ namespace ChatAppAPI
 
             // Thêm gRPC
             builder.Services.AddGrpc();
-            builder.WebHost.ConfigureKestrel(options =>
-            {
-                // Port cho REST API (Swagger, Controllers) → HTTP/1.1
-                options.ListenAnyIP(5000, o => o.Protocols = HttpProtocols.Http1);
-
-                // Port cho gRPC → HTTP/2
-                options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2);
-                // HTTPS (dùng dev certificate của ASP.NET)
-                options.ListenAnyIP(7216, o =>
-                {
-                    o.Protocols = HttpProtocols.Http1AndHttp2;
-                    o.UseHttps();
-                });
-            });
+            //builder.WebHost.ConfigureKestrel(options =>
+            //{
+            //    // HTTP
+            //    options.ListenAnyIP(8080); // chỉ HTTP
+            //                               // gRPC (có thể giữ)
+            //    options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2);
+            //    // Xóa hoặc comment HTTPS
+            //    // options.ListenAnyIP(7216, o =>
+            //    // {
+            //    //     o.Protocols = HttpProtocols.Http1AndHttp2;
+            //    //     o.UseHttps();
+            //    // });
+            //});
 
 
             // Configure Swagger to generate API documentation
